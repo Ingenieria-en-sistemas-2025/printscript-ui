@@ -1,6 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { Avatar, Typography, Menu, MenuItem, Box, Divider, ButtonBase } from "@mui/material";
-import LogoutButton from "./LogoutButton.tsx";
+import { Avatar, Typography, Menu, Box, ButtonBase } from "@mui/material";
 import React from "react";
 
 const Profile = () => {
@@ -49,12 +48,6 @@ const Profile = () => {
                         overflow: 'visible',
                         filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
                         mt: 1.5,
-                        '& .MuiAvatar-root': {
-                            width: 32,
-                            height: 32,
-                            ml: -0.5,
-                            mr: 1,
-                        },
                         '&::before': {
                             content: '""',
                             display: 'block',
@@ -81,11 +74,6 @@ const Profile = () => {
                     <Typography fontWeight={500} variant="body1">{user.name}</Typography>
                     <Typography color="text.secondary" variant="body2">{user.email}</Typography>
                 </Box>
-
-                <Divider />
-                <MenuItem onClick={handleClose} disableRipple>
-                    <LogoutButton />
-                </MenuItem>
             </Menu>
         </>
     );

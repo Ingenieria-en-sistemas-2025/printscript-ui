@@ -9,10 +9,14 @@ const LogoutButton = () => {
             onClick={() => {
                 logout({ logoutParams: { returnTo: window.location.origin } });
             }}
-            variant="text"
-            color="error"
+            variant="contained"
             size="small"
-            sx={{ width: '100%', justifyContent: 'flex-start' }}
+            sx={{
+                backgroundColor: 'primary.light',
+                "&:hover": {
+                    backgroundColor: 'primary.main'
+                }
+            }}
         >
             Log Out
         </Button>

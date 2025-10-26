@@ -8,7 +8,6 @@ import {FileType} from "../types/FileType.ts";
 import {Rule} from "../types/Rule.ts";
 // import {useAuth0} from "@auth0/auth0-react";
 // import {useEffect} from "react";
-//import {Auth0SnippetService} from "../services/Auth0SnippetService.ts";
 
 
 export const useSnippetsOperations = () => {

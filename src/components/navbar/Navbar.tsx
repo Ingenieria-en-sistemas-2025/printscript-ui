@@ -3,8 +3,9 @@ import {Code, Rule} from "@mui/icons-material";
 import {ReactNode} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
-import Profile from "../user-auth/Profile.tsx";
-import LoginButton from "../user-auth/LoginButton.tsx";
+import Profile from "./user-auth/Profile.tsx";
+import LoginButton from "./user-auth/LoginButton.tsx";
+import LogoutButton from "./user-auth/LogoutButton.tsx";
 
 type PageType = {
     title: string;
@@ -66,11 +67,16 @@ export const Navbar = () => {
                             </Button>
                         ))}
                     </Box>
-                    {isAuthenticated ? (
-                        <Profile /> // Si esta autenticado, muestra el perfil
-                    ) : (
-                        <LoginButton /> // Si no, muestra el boton de login
-                    )}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
+                        {isAuthenticated ? (
+                            <>
+                                <Profile />
+                                <LogoutButton />
+                            </>
+                        ) : (
+                            <LoginButton /> // Si no esa autenticado, muestra el login
+                        )}
+                    </Box>
                 </Toolbar>
             </Container>
         </AppBar>
