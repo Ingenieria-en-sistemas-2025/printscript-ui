@@ -2,7 +2,7 @@ name: CI + Publish Docker image
 
 on:
   push:
-    branches: [ "dev", "main" ]
+    branches: [ "dev", "main", "master" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -133,7 +133,7 @@ jobs:
             if [ -n "${GHCR_USER}" ] && [ -n "${GHCR_PAT}" ]; then
               echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             fi
-            docker network create printscript-net || true
+            
             docker compose pull printscript-ui
             docker compose up -d printscript-ui
             docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
@@ -157,7 +157,7 @@ jobs:
             if [ -n "${GHCR_USER}" ] && [ -n "${GHCR_PAT}" ]; then
               echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             fi
-            docker network create printscript-net || true
+            
             docker compose pull printscript-ui
             docker compose up -d printscript-ui
             docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
