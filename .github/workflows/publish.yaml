@@ -50,7 +50,7 @@ jobs:
   publish:
     name: Build & Push Docker image
     needs: ci
-    if: github.event_name == 'push' && (github.ref_name == 'dev' || github.ref_name == 'main')
+    if: github.event_name == 'push' && (github.ref_name == 'dev' || github.ref_name == 'main'  || github.ref_name == 'master')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -87,6 +87,9 @@ jobs:
             if [ "${{ github.ref_name }}" = "main" ]; then
               echo "$IMAGE:latest"
             fi
+            if [ "${{ github.ref_name }}" = "master" ]; then
+              echo "$IMAGE:latest"
+            fi
             if [ "${{ github.ref_name }}" = "dev" ]; then
               echo "$IMAGE:dev-latest"
             fi
@@ -111,7 +114,7 @@ jobs:
   deploy:
     name: Deploy to VM
     needs: publish
-    if: github.event_name == 'push' && (github.ref_name == 'dev' || github.ref_name == 'main')
+    if: github.event_name == 'push' && (github.ref_name == 'dev')
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to DEV over SSH
@@ -139,7 +142,7 @@ jobs:
             docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
 
       - name: Deploy to PROD over SSH
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' || github.ref_name == 'master'
         uses: appleboy/ssh-action@v1.0.3
         env:
           GHCR_USER: ${{ secrets.GHCR_USER }}
