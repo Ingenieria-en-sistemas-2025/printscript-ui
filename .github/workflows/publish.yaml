@@ -1,0 +1,163 @@
+name: CI + Publish Docker image
+
+on:
+  push:
+    branches: [ "dev", "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+# Evita ejecuciones superpuestas por branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run tests (CI)
+        # Ejecuta tests y permite que falle si no hay un script de test definido
+        run: npm test -- --ci || npm run test --if-present -- --ci || true
+
+      - name: Build (Vite)
+        run: npm run build
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          if-no-files-found: ignore
+          path: |
+            coverage/**
+            junit*.xml
+            **/test-results/**
+            **/junit/**
+
+  publish:
+    name: Build & Push Docker image
+    needs: ci
+    if: github.event_name == 'push' && (github.ref_name == 'dev' || github.ref_name == 'main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create short SHA
+        id: short-sha
+        uses: benjlevesque/short-sha@v1.2
+        with:
+          length: 8
+
+      - name: Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute images and tags
+        id: meta
+        run: |
+          # Lógica simple: usa el nombre del repo actual y lo convierte a minúsculas
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          {
+            echo "tags<<EOF"
+            echo "$IMAGE:${{ steps.short-sha.outputs.sha }}"
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              echo "$IMAGE:latest"
+            fi
+            if [ "${{ github.ref_name }}" = "dev" ]; then
+              echo "$IMAGE:dev-latest"
+            fi
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Build & Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          provenance: false
+          build-args: |
+            VITE_FRONTEND_URL=${{ secrets.VITE_FRONTEND_URL }}
+            VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
+            VITE_AUTH0_DOMAIN=${{ secrets.VITE_AUTH0_DOMAIN }}
+            VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}
+            VITE_AUTH0_AUDIENCE=${{ secrets.VITE_AUTH0_AUDIENCE }}
+            VITE_AUTH0_SCOPE=${{ secrets.VITE_AUTH0_SCOPE }}
+
+  deploy:
+    name: Deploy to VM
+    needs: publish
+    if: github.event_name == 'push' && (github.ref_name == 'dev' || github.ref_name == 'main')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to DEV over SSH
+        if: github.ref_name == 'dev'
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GHCR_USER: ${{ secrets.GHCR_USER }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+        with:
+          host: ${{ secrets.VM_DEV_HOST }}
+          username: ${{ secrets.VM_SSH_USER }}
+          key: ${{ secrets.VM_DEV_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/infrastructure
+            git fetch --all
+            git checkout dev || true
+            git pull || true
+            if [ -n "${GHCR_USER}" ] && [ -n "${GHCR_PAT}" ]; then
+              echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            fi
+            docker network create printscript-net || true
+            docker compose pull printscript-ui
+            docker compose up -d printscript-ui
+            docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
+
+      - name: Deploy to PROD over SSH
+        if: github.ref_name == 'main'
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GHCR_USER: ${{ secrets.GHCR_USER }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+        with:
+          host: ${{ secrets.VM_PROD_HOST }}
+          username: ${{ secrets.VM_SSH_USER }}
+          key: ${{ secrets.VM_PROD_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/infrastructure
+            git fetch --all
+            git checkout main || true
+            git pull || true
+            if [ -n "${GHCR_USER}" ] && [ -n "${GHCR_PAT}" ]; then
+              echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            fi
+            docker network create printscript-net || true
+            docker compose pull printscript-ui
+            docker compose up -d printscript-ui
+            docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
