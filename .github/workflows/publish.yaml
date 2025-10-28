@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-# Evita ejecuciones superpuestas por branch
+# Evita ejecuciones superpuestas por branchh
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
