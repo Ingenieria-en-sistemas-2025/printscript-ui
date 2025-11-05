@@ -58,7 +58,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
     async createSnippet(createSnippet: CreateSnippet): Promise<Snippet> {
         const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/create`,
+            `${API_BASE_URL}/snippets`,
             {
                 method: 'POST',
                 body: JSON.stringify(createSnippet),
