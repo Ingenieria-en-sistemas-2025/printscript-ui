@@ -14,6 +14,7 @@ export type CreateSnippet = {
   description?: string;
   language: string;
   version: string;
+  extension: string;
   source?: 'INLINE' | 'FILE_UPLOAD';
 }
 

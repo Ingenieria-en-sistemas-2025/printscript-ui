@@ -55,12 +55,13 @@ export const SnippetTable = (props: SnippetTableProps) => {
       return
     }
     file.text().then((text) => {
-      setSnippet({
-        name: splitName[0],
-        content: text,
-        language: fileType.language,
-        extension: fileType.extension
-      })
+        setSnippet({
+            name: splitName[0],
+            content: text,
+            language: fileType.language,
+            version: (fileType.versions?.[0] ?? "1.0"),
+            extension: fileType.extension,
+        });
     }).catch(e => {
       console.error(e)
     }).finally(() => {
@@ -94,14 +95,15 @@ export const SnippetTable = (props: SnippetTableProps) => {
           </Button>
         </Box>
         <Table size="medium" sx={{borderSpacing: "0 10px", borderCollapse: "separate"}}>
-          <TableHead>
-            <TableRow sx={{fontWeight: 'bold'}}>
-              <StyledTableCell sx={{fontWeight: "bold"}}>Name</StyledTableCell>
-              <StyledTableCell sx={{fontWeight: "bold"}}>Language</StyledTableCell>
-              <StyledTableCell sx={{fontWeight: "bold"}}>Author</StyledTableCell>
-              <StyledTableCell sx={{fontWeight: "bold"}}>Conformance</StyledTableCell>
-            </TableRow>
-          </TableHead>
+            <TableHead>
+                <TableRow sx={{fontWeight: 'bold'}}>
+                    <StyledTableCell sx={{fontWeight: "bold"}}>Name</StyledTableCell>
+                    <StyledTableCell sx={{fontWeight: "bold"}}>Language</StyledTableCell>
+                    <StyledTableCell sx={{fontWeight: "bold"}}>Version</StyledTableCell>
+                    <StyledTableCell sx={{fontWeight: "bold"}}>Author</StyledTableCell>
+                    <StyledTableCell sx={{fontWeight: "bold"}}>Conformance</StyledTableCell>
+                </TableRow>
+            </TableHead>
           <TableBody>{
             loading ? (
                 <>
