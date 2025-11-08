@@ -5,18 +5,23 @@ import { TestCase } from "../../types/TestCase.ts";
 import { TestCaseResult } from "../queries.tsx";
 import { FileType } from "../../types/FileType.ts";
 import { Rule } from "../../types/Rule.ts";
+import type { GetTokenSilentlyOptions } from '@auth0/auth0-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/";
+const AUD = import.meta.env.VITE_AUTH0_AUDIENCE;
+const SCOPE = import.meta.env.VITE_AUTH0_SCOPE ?? "";
 
 export class Auth0SnippetOperations implements SnippetOperations {
-    private getAccessTokenSilently: () => Promise<string>;
+    private getAccessTokenSilently: (opts?: GetTokenSilentlyOptions) => Promise<string>;
 
     constructor(getAccessTokenSilently: () => Promise<string>) {
         this.getAccessTokenSilently = getAccessTokenSilently;
     }
 
-    private async fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
-        const token = await this.getAccessTokenSilently();
+    private async fetchWithAuth(path: string, options: RequestInit = {}): Promise<Response> {
+        const token = await this.getAccessTokenSilently({
+            authorizationParams: { audience: AUD, scope: SCOPE }
+        });
 
         const headers = {
             'Content-Type': 'application/json',
@@ -24,16 +29,16 @@ export class Auth0SnippetOperations implements SnippetOperations {
             ...options.headers,
         };
 
-        const response = await fetch(url, {
-            ...options,
-            headers,
-        });
+        const url = path.startsWith('http')
+            ? path
+            : `${(import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        const res = await fetch(url, { ...options, headers });
+        if (!res.ok) {
+            const t = await res.text().catch(() => '');
+            throw new Error(`HTTP ${res.status} ${url} -> ${t}`);
         }
-
-        return response;
+        return res;
     }
 
     async listSnippetDescriptors(
