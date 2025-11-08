@@ -7,7 +7,8 @@ import "prismjs/themes/prism-okaidia.css";
 import {Alert, Box, CircularProgress, IconButton, Tooltip, Typography} from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import {
-  useUpdateSnippetById
+    useUpdateSnippetById,
+    useGetUsers
 } from "../utils/queries.tsx";
 import {useFormatSnippet, useGetSnippetById, useShareSnippet} from "../utils/queries.tsx";
 import {Bòx} from "../components/snippet-table/SnippetBox.tsx";
@@ -70,11 +71,13 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     onSuccess: () => queryClient.invalidateQueries(["snippet", id]),
   });
 
-  useEffect(() => {
-    if (snippet?.content != null) {
-      setCode(snippet.content);
-    }
-  }, [snippet]);
+    const {data: usersData, isLoading: loadingUsers} = useGetUsers();
+
+    useEffect(() => {
+        if (snippet) {
+            setCode(snippet.content ?? "");
+        }
+    }, [snippet]);
 
   useEffect(() => {
     if (formatSnippetData?.content != null) {
