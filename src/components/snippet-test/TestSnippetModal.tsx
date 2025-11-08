@@ -3,21 +3,25 @@ import {ModalWrapper} from "../common/ModalWrapper.tsx";
 import {SyntheticEvent, useState} from "react";
 import {AddRounded} from "@mui/icons-material";
 import {useGetTestCases, usePostTestCase, useRemoveTestCase} from "../../utils/queries.tsx";
+import {TestCase} from "../../types/TestCase.ts"
 import {TabPanel} from "./TabPanel.tsx";
 import {queryClient} from "../../App.tsx";
 
 type TestSnippetModalProps = {
-    open: boolean
-    onClose: () => void
+    open: boolean;
+    onClose: () => void;
+    snippetId: string;
 }
 
-export const TestSnippetModal = ({open, onClose}: TestSnippetModalProps) => {
+export const TestSnippetModal = ({open, onClose, snippetId}: TestSnippetModalProps) => {
     const [value, setValue] = useState(0);
 
-    const {data: testCases} = useGetTestCases();
-    const {mutateAsync: postTestCase} = usePostTestCase();
-    const {mutateAsync: removeTestCase} = useRemoveTestCase({
-        onSuccess: () => queryClient.invalidateQueries('testCases')
+    const { data: testCases } = useGetTestCases(snippetId);
+    const { mutateAsync: postTestCase } = usePostTestCase(snippetId, {
+        onSuccess: () => queryClient.invalidateQueries(["testCases", snippetId]),
+    });
+    const { mutateAsync: removeTestCase } = useRemoveTestCase(snippetId, {
+        onSuccess: () => queryClient.invalidateQueries(["testCases", snippetId]),
     });
 
     const handleChange = (_: SyntheticEvent, newValue: number) => {
@@ -26,8 +30,8 @@ export const TestSnippetModal = ({open, onClose}: TestSnippetModalProps) => {
 
     return (
         <ModalWrapper open={open} onClose={onClose}>
-            <Typography variant={"h5"}>Test snippet</Typography>
-            <Divider/>
+            <Typography variant="h5">Test snippet</Typography>
+            <Divider />
             <Box mt={2} display="flex">
                 <Tabs
                     orientation="vertical"
@@ -35,25 +39,37 @@ export const TestSnippetModal = ({open, onClose}: TestSnippetModalProps) => {
                     value={value}
                     onChange={handleChange}
                     aria-label="Vertical tabs example"
-                    sx={{borderRight: 1, borderColor: 'divider'}}
+                    sx={{ borderRight: 1, borderColor: "divider" }}
                 >
-                    {testCases?.map((testCase) => (
-                        <Tab label={testCase.name}/>
-                    ))}
-                    <IconButton disableRipple onClick={() => setValue((testCases?.length ?? 0) + 1)}>
+                    {testCases?.map((tc) => <Tab key={tc.id} label={tc.name} />)}
+                    <IconButton
+                        disableRipple
+                        onClick={() => setValue((testCases?.length ?? 0) + 1)}
+                        aria-label="Add test case"
+                    >
                         <AddRounded />
                     </IconButton>
                 </Tabs>
+
                 {testCases?.map((testCase, index) => (
-                    <TabPanel index={index} value={value} test={testCase}
-                              setTestCase={(tc) => postTestCase(tc)}
-                              removeTestCase={(i) => removeTestCase(i)}
+                    <TabPanel
+                        key={testCase.id}
+                        index={index}
+                        value={value}
+                        snippetId={snippetId}
+                        test={testCase}
+                        setTestCase={(tc) => postTestCase(tc)}
+                        removeTestCase={(id) => removeTestCase(id)}
                     />
                 ))}
-                <TabPanel index={(testCases?.length ?? 0) + 1} value={value}
-                          setTestCase={(tc) => postTestCase(tc)}
+
+                <TabPanel
+                    index={(testCases?.length ?? 0) + 1}
+                    value={value}
+                    snippetId={snippetId}
+                    setTestCase={(tc) => postTestCase(tc as Partial<TestCase>)}
                 />
             </Box>
         </ModalWrapper>
-    )
+    );
 }

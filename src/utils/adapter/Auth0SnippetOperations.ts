@@ -53,7 +53,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
     ): Promise<PaginatedSnippets> {
         const params = new URLSearchParams({
             page: page.toString(),
-            pageSize: pageSize.toString(),
+            size: pageSize.toString(),
         });
 
         if (snippetName) {
@@ -171,32 +171,34 @@ export class Auth0SnippetOperations implements SnippetOperations {
         return response.json();
     }
 
-    async getTestCases(): Promise<TestCase[]> {
-        const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/cases/all`
+    async getTestCases(snippetId: string): Promise<TestCase[]> {
+        const res = await this.fetchWithAuth(
+            `${API_BASE_URL}/snippets/${snippetId}/tests`
         );
-        return response.json();
+        return res.json();
     }
 
-    async postTestCase(testCase: Partial<TestCase>): Promise<TestCase> {
-        const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/cases`,
-            {
-                method: 'POST',
-                body: JSON.stringify(testCase),
-            }
-        );
-        return response.json();
+    async postTestCase(snippetId: string, tc: Partial<TestCase>) {
+        const body = JSON.stringify({
+            name: tc.name ?? "",
+            inputs: tc.inputs ?? [],
+            expectedOutputs: tc.expectedOutputs ?? [],
+            targetVersionNumber: tc.targetVersionNumber ?? null,
+        });
+        const res = await this.fetchWithAuth(`${API_BASE_URL}/snippets/${snippetId}/tests`, {
+            method: 'POST',
+            body,
+        });
+        return res.json();
     }
 
-    async removeTestCase(id: string): Promise<string> {
+
+    async removeTestCase(testCaseId: string): Promise<string> {
         await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/cases/${id}`,
-            {
-                method: 'DELETE',
-            }
+            `${API_BASE_URL}/snippets/tests/${testCaseId}`,
+            { method: 'DELETE' }
         );
-        return id;
+        return testCaseId;
     }
 
     async deleteSnippet(id: string): Promise<string> {
@@ -221,20 +223,11 @@ export class Auth0SnippetOperations implements SnippetOperations {
         return data.formattedContent || data.content || snippet;
     }
 
-    async testSnippet(testCase: Partial<TestCase>): Promise<TestCaseResult> {
-        const testCaseId = testCase.id;
-        if (!testCaseId) {
-            throw new Error('Test case ID is required');
-        }
-
-        const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/run/case/${testCaseId}`,
-            {
-                method: 'POST',
-                body: JSON.stringify(testCase),
-            }
+    async testSnippet(snippetId: string, testCaseId: string): Promise<TestCaseResult> {
+        const res = await this.fetchWithAuth(
+            `${API_BASE_URL}/snippets/${snippetId}/tests/${testCaseId}/run`,
+            { method: 'POST' },
         );
-        const data = await response.json();
-        return data.result === 'success' ? 'success' : 'fail';
+        return res.json();
     }
 }

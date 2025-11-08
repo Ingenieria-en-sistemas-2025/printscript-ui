@@ -1,6 +1,7 @@
 export type TestCase = {
     id: string;
     name: string;
-    input?: string[];
-    output?: string[];
+    inputs?: string[];
+    expectedOutputs: string[];
+    targetVersionNumber?: number | null;
 };
