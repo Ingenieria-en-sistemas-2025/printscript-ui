@@ -49,34 +49,41 @@ const DownloadButton = ({snippet}: { snippet?: Snippet }) => {
 }
 
 export const SnippetDetail = (props: SnippetDetailProps) => {
-  const {id, handleCloseModal} = props;
-  const [code, setCode] = useState(
-      ""
-  );
-  const [shareModalOppened, setShareModalOppened] = useState(false)
-  const [deleteConfirmationModalOpen, setDeleteConfirmationModalOpen] = useState(false)
+  const { id, handleCloseModal } = props;
+
+  const [code, setCode] = useState<string>("");
+
+  const [shareModalOppened, setShareModalOppened] = useState(false);
+  const [deleteConfirmationModalOpen, setDeleteConfirmationModalOpen] = useState(false);
   const [testModalOpened, setTestModalOpened] = useState(false);
 
-  const {data: snippet, isLoading} = useGetSnippetById(id);
-  const {mutate: shareSnippet, isLoading: loadingShare} = useShareSnippet()
-  const {mutate: formatSnippet, isLoading: isFormatLoading, data: formatSnippetData} = useFormatSnippet()
-  const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({onSuccess: () => queryClient.invalidateQueries(['snippet', id])})
+  const { data: snippet, isLoading } = useGetSnippetById(id);
+  const { mutate: shareSnippet, isLoading: loadingShare } = useShareSnippet();
+
+  const {
+    mutate: formatSnippet,
+    isLoading: isFormatLoading,
+    data: formatSnippetData,
+  } = useFormatSnippet(id);
+
+  const { mutate: updateSnippet, isLoading: isUpdateSnippetLoading } = useUpdateSnippetById({
+    onSuccess: () => queryClient.invalidateQueries(["snippet", id]),
+  });
 
   useEffect(() => {
-    if (snippet) {
+    if (snippet?.content != null) {
       setCode(snippet.content);
     }
   }, [snippet]);
 
   useEffect(() => {
-    if (formatSnippetData) {
-      setCode(formatSnippetData)
+    if (formatSnippetData?.content != null) {
+      setCode(formatSnippetData.content);
     }
-  }, [formatSnippetData])
-
+  }, [formatSnippetData]);
 
   async function handleShareSnippet(userId: string) {
-    shareSnippet({snippetId: id, userId})
+    shareSnippet({ snippetId: id, userId });
   }
 
   return (
@@ -109,17 +116,23 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
               {/*</Tooltip>*/}
               {/* TODO: we can implement a live mode*/}
               <Tooltip title={"Format"}>
-                <IconButton onClick={() => formatSnippet(code)} disabled={isFormatLoading}>
+                <IconButton onClick={() => formatSnippet()} disabled={isFormatLoading}>
                   <ReadMoreIcon />
                 </IconButton>
               </Tooltip>
+
               <Tooltip title={"Save changes"}>
-                <IconButton color={"primary"} onClick={() => updateSnippet({id: id, updateSnippet: {content: code}})} disabled={isUpdateSnippetLoading || snippet?.content === code} >
+                <IconButton
+                  color={"primary"}
+                  onClick={() => updateSnippet({ id, updateSnippet: { content: code } })}
+                  disabled={isUpdateSnippetLoading || snippet?.content === code}
+                >
                   <Save />
                 </IconButton>
               </Tooltip>
+
               <Tooltip title={"Delete"}>
-                <IconButton onClick={() => setDeleteConfirmationModalOpen(true)} >
+                <IconButton onClick={() => setDeleteConfirmationModalOpen(true)}>
                   <Delete color={"error"} />
                 </IconButton>
               </Tooltip>
@@ -146,15 +159,22 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
             </Box>
           </>
         }
-        <ShareSnippetModal loading={loadingShare || isLoading} open={shareModalOppened}
-                           onClose={() => setShareModalOppened(false)}
-                           onShare={handleShareSnippet}/>
-          <TestSnippetModal
-              open={testModalOpened}
-              onClose={() => setTestModalOpened(false)}
-              snippetId={id}
-          />
-        <DeleteConfirmationModal open={deleteConfirmationModalOpen} onClose={() => setDeleteConfirmationModalOpen(false)} id={snippet?.id ?? ""} setCloseDetails={handleCloseModal} />
+
+        <ShareSnippetModal
+          loading={loadingShare || isLoading}
+          open={shareModalOppened}
+          onClose={() => setShareModalOppened(false)}
+          onShare={handleShareSnippet}
+        />
+
+        <TestSnippetModal open={testModalOpened} onClose={() => setTestModalOpened(false)} snippetId={id} />
+
+        <DeleteConfirmationModal
+          open={deleteConfirmationModalOpen}
+          onClose={() => setDeleteConfirmationModalOpen(false)}
+          id={snippet?.id ?? ""}
+          setCloseDetails={handleCloseModal}
+        />
       </Box>
   );
 }
