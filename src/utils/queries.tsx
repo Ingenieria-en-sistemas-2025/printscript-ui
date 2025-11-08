@@ -168,13 +168,19 @@ export const useModifyLintingRules = ({onSuccess}: {onSuccess: () => void}) => {
   );
 }
 
-export const useFormatSnippet = () => {
-  const snippetOperations = useSnippetsOperations()
+export const useFormatSnippet = (snippetId: string) => {
+  const ops = useSnippetsOperations();
+  const qc = useQueryClient();
 
-  return useMutation<string, Error, string>(
-      snippetContent => snippetOperations.formatSnippet(snippetContent)
-  );
-}
+  return useMutation<Snippet, Error, void>({
+    mutationKey: ['format-snippet', snippetId],
+    mutationFn: () => ops.formatSnippet(snippetId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['snippet', snippetId] });
+      qc.invalidateQueries({ queryKey: ['listSnippets'] });
+    },
+  });
+};
 
 export const useDeleteSnippet = ({onSuccess}: {onSuccess: () => void}) => {
   const snippetOperations = useSnippetsOperations()
