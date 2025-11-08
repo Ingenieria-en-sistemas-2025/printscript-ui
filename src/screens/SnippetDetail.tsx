@@ -172,7 +172,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         open={shareModalOppened}
         onClose={() => setShareModalOppened(false)}
         onShare={handleShareSnippet}
-        users={usersData?.users}
+        users={usersData?.items}
         usersLoading={loadingUsers}
       />
 

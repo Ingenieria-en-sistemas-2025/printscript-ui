@@ -1,7 +1,7 @@
 import {Pagination} from "./pagination.ts";
 
 export type PaginatedUsers = Pagination & {
-  users: User[]
+  items: User[]
 }
 
 export type User = {
