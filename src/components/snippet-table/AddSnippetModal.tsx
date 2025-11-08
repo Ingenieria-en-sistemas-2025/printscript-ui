@@ -29,31 +29,44 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     defaultSnippet?: CreateSnippetWithLang
 }) => {
     const [language, setLanguage] = useState(defaultSnippet?.language ?? "printscript");
+    const [version, setVersion]   = useState(defaultSnippet?.version  ?? "1.1");
     const [code, setCode] = useState(defaultSnippet?.content ?? "");
     const [snippetName, setSnippetName] = useState(defaultSnippet?.name ?? "")
+
     const {mutateAsync: createSnippet, isLoading: loadingSnippet} = useCreateSnippet({
         onSuccess: () => queryClient.invalidateQueries('listSnippets')
     })
     const {data: fileTypes} = useGetFileTypes();
 
+    useEffect(() => {
+        if (!fileTypes) return;
+        const ft = fileTypes.find(f => f.language === language);
+        if (ft?.versions?.length) {
+            setVersion(prev => ft.versions.includes(prev) ? prev : ft.versions[0]);
+        }
+    }, [language, fileTypes]);
+
+    useEffect(() => {
+        if (defaultSnippet) {
+            setCode(defaultSnippet.content);
+            setLanguage(defaultSnippet.language);
+            setSnippetName(defaultSnippet.name);
+            if (defaultSnippet.version) setVersion(defaultSnippet.version);
+        }
+    }, [defaultSnippet]);
+
     const handleCreateSnippet = async () => {
         const newSnippet: CreateSnippet = {
             name: snippetName,
             content: code,
-            language: language,
-            extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs"
+            language,
+            version,
+            // extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs"
         }
         await createSnippet(newSnippet);
         onClose();
     }
 
-    useEffect(() => {
-        if (defaultSnippet) {
-            setCode(defaultSnippet?.content)
-            setLanguage(defaultSnippet?.language)
-            setSnippetName(defaultSnippet?.name)
-        }
-    }, [defaultSnippet]);
 
     return (
         <ModalWrapper open={open} onClose={onClose}>
@@ -104,6 +117,21 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                     }
                 </Select>
             </Box>
+
+            {/* Version */}
+            <Box sx={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+                <InputLabel>Version</InputLabel>
+                <Select
+                    value={version}
+                    onChange={(e: SelectChangeEvent<string>) => setVersion(e.target.value)}
+                    sx={{ width:'50%' }}
+                >
+                    {(fileTypes?.find(f => f.language === language)?.versions ?? []).map(v => (
+                        <MenuItem key={v} value={v}>{v}</MenuItem>
+                    ))}
+                </Select>
+            </Box>
+
             <InputLabel>Code Snippet</InputLabel>
             <Box width={"100%"} sx={{
                 backgroundColor: 'black', color: 'white', borderRadius: "8px",
