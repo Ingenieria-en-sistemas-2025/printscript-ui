@@ -112,7 +112,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
         if (pageSize !== undefined) params.append('pageSize', pageSize.toString());
 
         const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/users?${params.toString()}`
+            `${API_BASE_URL}/api/users?${params.toString()}`
         );
         return response.json();
     }
