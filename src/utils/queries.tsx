@@ -1,4 +1,4 @@
-import {useMutation, UseMutationResult, useQuery} from 'react-query';
+import {useMutation, UseMutationResult, useQuery, useQueryClient} from 'react-query';
 import {CreateSnippet, PaginatedSnippets, Snippet, UpdateSnippet} from './snippet.ts';
 import {SnippetOperations} from "./snippetOperations.ts";
 import {PaginatedUsers} from "./users.ts";
@@ -74,43 +74,65 @@ export const useShareSnippet = () => {
 };
 
 
-export const useGetTestCases = () => {
-  const snippetOperations = useSnippetsOperations()
-
-  return useQuery<TestCase[] | undefined, Error>(['testCases'], () => snippetOperations.getTestCases(), {});
+export const useGetTestCases = (snippetId: string) => {
+    const ops = useSnippetsOperations();
+    return useQuery<TestCase[], Error>(
+        ['testCases', snippetId],
+        () => ops.getTestCases(snippetId),
+        { enabled: !!snippetId }
+    );
 };
 
 
-export const usePostTestCase = () => {
-  const snippetOperations = useSnippetsOperations()
+export const usePostTestCase = (snippetId: string, { onSuccess }: { onSuccess?: () => void } = {}) => {
+    const ops = useSnippetsOperations();
+    const queryClient = useQueryClient();
 
-  return useMutation<TestCase, Error, Partial<TestCase>>(
-      (tc) => snippetOperations.postTestCase(tc)
-  );
+    return useMutation<TestCase, Error, Partial<TestCase>>(
+        (tc) => ops.postTestCase(snippetId, tc),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries(['testCases', snippetId]);
+                onSuccess?.();
+            },
+        }
+    );
 };
 
+export const useRemoveTestCase = (snippetId: string, { onSuccess }: { onSuccess?: () => void } = {}) => {
+    const ops = useSnippetsOperations();
+    const queryClient = useQueryClient();
 
-export const useRemoveTestCase = ({onSuccess}: {onSuccess: () => void}) => {
-  const snippetOperations = useSnippetsOperations()
-
-  return useMutation<string, Error, string>(
-      ['removeTestCase'],
-      (id) => snippetOperations.removeTestCase(id),
-      {
-        onSuccess,
-      }
-  );
+    return useMutation<string, Error, string>(
+        (testCaseId) => ops.removeTestCase(testCaseId),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries(['testCases', snippetId]);
+                onSuccess?.();
+            },
+        }
+    );
 };
 
-export type TestCaseResult = "success" | "fail"
+export type TestCaseResult = {
+    status: "OK" | "MISMATCH" | "ERROR";
+    actual?: string[] | null;
+    expected: string[];
+    mismatchAt?: number | null;
+    diagnostic?: {
+        code: string;
+        message: string;
+        line?: number | null;
+        column?: number | null;
+    } | null;
+};
 
-export const useTestSnippet = () => {
-  const snippetOperations = useSnippetsOperations()
-
-  return useMutation<TestCaseResult, Error, Partial<TestCase>>(
-      (tc) => snippetOperations.testSnippet(tc)
-  )
-}
+export const useTestSnippet = (snippetId: string) => {
+    const ops = useSnippetsOperations();
+    return useMutation<TestCaseResult, Error, { testCaseId: string }>(
+        ({ testCaseId }) => ops.testSnippet(snippetId, testCaseId)
+    );
+};
 
 
 
