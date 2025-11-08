@@ -12,6 +12,7 @@ export type CreateSnippet = {
   name: string;
   content: string;
   language: string;
+  version: string;
   extension: string;
 }
 

@@ -14,7 +14,7 @@ const SCOPE = import.meta.env.VITE_AUTH0_SCOPE ?? "";
 export class Auth0SnippetOperations implements SnippetOperations {
     private getAccessTokenSilently: (opts?: GetTokenSilentlyOptions) => Promise<string>;
 
-    constructor(getAccessTokenSilently: () => Promise<string>) {
+    constructor(getAccessTokenSilently: (opts?: GetTokenSilentlyOptions) => Promise<string>) {
         this.getAccessTokenSilently = getAccessTokenSilently;
     }
 
@@ -22,6 +22,8 @@ export class Auth0SnippetOperations implements SnippetOperations {
         const token = await this.getAccessTokenSilently({
             authorizationParams: { audience: AUD, scope: SCOPE }
         });
+
+        console.log("TOKEN payload:", JSON.parse(atob(token.split('.')[1])));
 
         const headers = {
             'Content-Type': 'application/json',
