@@ -8,7 +8,6 @@ import {Alert, Box, CircularProgress, IconButton, Tooltip, Typography} from "@mu
 import CloseIcon from '@mui/icons-material/Close';
 import {
     useUpdateSnippetById,
-    useGetUsers
 } from "../utils/queries.tsx";
 import {useFormatSnippet, useGetSnippetById, useShareSnippet} from "../utils/queries.tsx";
 import {Bòx} from "../components/snippet-table/SnippetBox.tsx";
@@ -71,7 +70,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     onSuccess: () => queryClient.invalidateQueries(["snippet", id]),
   });
 
-    const {data: usersData, isLoading: loadingUsers} = useGetUsers();
+
 
     useEffect(() => {
         if (snippet) {
