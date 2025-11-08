@@ -19,17 +19,20 @@ export class Auth0SnippetOperations implements SnippetOperations {
     }
 
     private async fetchWithAuth(path: string, options: RequestInit = {}): Promise<Response> {
-        const token = await this.getAccessTokenSilently({
-            authorizationParams: { audience: AUD, scope: SCOPE }
-        });
-
-        console.log("TOKEN payload:", JSON.parse(atob(token.split('.')[1])));
-
-        const headers = {
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            ...options.headers,
+            ...(options.headers as Record<string, string>),
         };
+
+        try {
+            const token = await this.getAccessTokenSilently({
+                authorizationParams: { audience: AUD, scope: SCOPE },
+            });
+            if (token && token !== 'undefined' && token !== 'null') {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+        } catch {
+        }
 
         const url = path.startsWith('http')
             ? path
