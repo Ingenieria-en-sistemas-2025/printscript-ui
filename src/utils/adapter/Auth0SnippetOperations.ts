@@ -6,6 +6,7 @@ import { TestCaseResult } from "../queries.tsx";
 import { FileType } from "../../types/FileType.ts";
 import { Rule } from "../../types/Rule.ts";
 import type { GetTokenSilentlyOptions } from '@auth0/auth0-react';
+import { ApiRuleDto, toUiRule, toApiRules } from "./ApiRuleDto";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/";
 const AUD = import.meta.env.VITE_AUTH0_AUDIENCE;
@@ -129,39 +130,15 @@ export class Auth0SnippetOperations implements SnippetOperations {
     }
 
     async getFormatRules(): Promise<Rule[]> {
-        const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/rules/format`
-        );
-        return response.json();
+        const res = await this.fetchWithAuth(`${API_BASE_URL}/snippets/rules/format`);
+        const api: ApiRuleDto[] = await res.json();
+        return api.map(toUiRule);
     }
 
     async getLintingRules(): Promise<Rule[]> {
-        const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/rules/linting`
-        );
-        return response.json();
-    }
-
-    async modifyFormatRule(newRules: Rule[]): Promise<Rule[]> {
-        const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/rules`,
-            {
-                method: 'PUT',
-                body: JSON.stringify({ type: 'format', rules: newRules }),
-            }
-        );
-        return response.json();
-    }
-
-    async modifyLintingRule(newRules: Rule[]): Promise<Rule[]> {
-        const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/rules`,
-            {
-                method: 'PUT',
-                body: JSON.stringify({ type: 'linting', rules: newRules }),
-            }
-        );
-        return response.json();
+        const res = await this.fetchWithAuth(`${API_BASE_URL}/snippets/rules/linting`);
+        const api: ApiRuleDto[] = await res.json();
+        return api.map(toUiRule);
     }
 
     async getFileTypes(): Promise<FileType[]> {
@@ -211,17 +188,23 @@ export class Auth0SnippetOperations implements SnippetOperations {
         return id;
     }
 
-    async formatSnippet(snippet: string): Promise<string> {
-        const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/run/format`,
-            {
-                method: 'POST',
-                body: JSON.stringify({ content: snippet }),
-            }
+
+    async formatSnippet(snippetId: string): Promise<Snippet> {
+        const res = await this.fetchWithAuth(
+          `${API_BASE_URL}/snippets/run/${snippetId}/format`,
+          { method: "POST" }
         );
-        const data = await response.json();
-        return data.formattedContent || data.content || snippet;
+        return res.json();
     }
+
+    async lintSnippetById(snippetId: string): Promise<Snippet> {
+        const res = await this.fetchWithAuth(
+          `${API_BASE_URL}/snippets/run/${snippetId}/lint`,
+          { method: "POST" }
+        );
+        return res.json();
+    }
+
 
     async testSnippet(snippetId: string, testCaseId: string): Promise<TestCaseResult> {
         const res = await this.fetchWithAuth(
@@ -230,4 +213,29 @@ export class Auth0SnippetOperations implements SnippetOperations {
         );
         return res.json();
     }
+
+    async modifyFormatRule(newRules: Rule[], configText?: string, configFormat?: string): Promise<Rule[]> {
+        await this.fetchWithAuth(`${API_BASE_URL}/snippets/rules/format`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                rules: toApiRules(newRules),
+                configText,
+                configFormat,
+            }),
+        });
+        return this.getFormatRules();
+    }
+
+    async modifyLintingRule(newRules: Rule[], configText?: string, configFormat?: string): Promise<Rule[]> {
+        await this.fetchWithAuth(`${API_BASE_URL}/snippets/rules/linting`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                rules: toApiRules(newRules),
+                configText,
+                configFormat,
+            }),
+        });
+        return this.getLintingRules();
+    }
+
 }

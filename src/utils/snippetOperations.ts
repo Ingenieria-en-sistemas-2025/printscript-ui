@@ -24,7 +24,9 @@ export interface SnippetOperations {
 
   getTestCases(snippetId: string): Promise<TestCase[]>
 
-  formatSnippet(snippet: string): Promise<string>
+  formatSnippet(snippetId: string): Promise<Snippet>
+
+  lintSnippetById(snippetId: string): Promise<Snippet>
 
   postTestCase(snippetId: string, tc: Partial<TestCase>): Promise<TestCase>
 
@@ -36,7 +38,7 @@ export interface SnippetOperations {
 
   getFileTypes(): Promise<FileType[]>
 
-  modifyFormatRule(newRules: Rule[]): Promise<Rule[]>
+  modifyFormatRule(newRules: Rule[], configText?: string, configFormat?: string): Promise<Rule[]>
 
-  modifyLintingRule(newRules: Rule[]): Promise<Rule[]>
+  modifyLintingRule(newRules: Rule[], configText?: string, configFormat?: string): Promise<Rule[]>
 }
