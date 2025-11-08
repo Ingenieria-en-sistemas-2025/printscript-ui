@@ -1,6 +1,6 @@
 import { SnippetOperations } from "../snippetOperations.ts";
 import { CreateSnippet, PaginatedSnippets, Snippet, UpdateSnippet } from "../snippet.ts";
-import { PaginatedUsers } from "../users.ts";
+import {PaginatedUsers, User} from "../users.ts";
 import { TestCase } from "../../types/TestCase.ts";
 import { TestCaseResult } from "../queries.tsx";
 import { FileType } from "../../types/FileType.ts";
@@ -108,14 +108,26 @@ export class Auth0SnippetOperations implements SnippetOperations {
     ): Promise<PaginatedUsers> {
         const params = new URLSearchParams();
 
+        const currentPage = page ?? 0;
+        const currentPageSize = pageSize ?? 10;
+
         if (name) params.append('name', name);
-        if (page !== undefined) params.append('page', page.toString());
-        if (pageSize !== undefined) params.append('pageSize', pageSize.toString());
+        params.append('page', currentPage.toString());
+        params.append('size', currentPageSize.toString());
+
 
         const response = await this.fetchWithAuth(
             `${API_BASE_URL}/api/users?${params.toString()}`
         );
-        return response.json();
+
+        const usersArray: User[] = await response.json();
+
+        return {
+            page: currentPage,
+            page_size: currentPageSize,
+            count: usersArray.length,
+            items: usersArray,
+        };
     }
 
     async shareSnippet(snippetId: string, userId: string): Promise<Snippet> {
