@@ -6,7 +6,7 @@ import "prismjs/components/prism-javascript";
 import "prismjs/themes/prism-okaidia.css";
 import { Alert, Box, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { useUpdateSnippetById, useGetUsers } from "../utils/queries.tsx";
+import {useUpdateSnippetById, useGetUsers, useSnippetsOperations} from "../utils/queries.tsx";
 import { useFormatSnippet, useGetSnippetById, useShareSnippet } from "../utils/queries.tsx";
 import { Bòx } from "../components/snippet-table/SnippetBox.tsx";
 import { BugReport, Delete, Download, Save, Share } from "@mui/icons-material";
@@ -24,21 +24,23 @@ type SnippetDetailProps = {
 };
 
 const DownloadButton = ({ snippet }: { snippet?: Snippet }) => {
+  const snippetOps = useSnippetsOperations();
+
   if (!snippet) return null;
-  const file = new Blob([snippet.content], { type: "text/plain" });
+
+  const handleDownload = async () => {
+    try {
+      await snippetOps.downloadSnippet(snippet.id, false); // usa tu endpoint /download
+    } catch (err) {
+      console.error("Error downloading snippet:", err);
+      alert("No tenés permisos para descargar este snippet o ocurrió un error.");
+    }
+  };
 
   return (
-    <Tooltip title={"Download"}>
-      <IconButton sx={{ cursor: "pointer" }}>
-        <a
-          download={`${snippet.name}.${snippet.extension || "prs"}`}
-          target="_blank"
-          rel="noreferrer"
-          href={URL.createObjectURL(file)}
-          style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center" }}
-        >
-          <Download />
-        </a>
+    <Tooltip title="Download">
+      <IconButton sx={{ cursor: "pointer" }} onClick={handleDownload}>
+        <Download />
       </IconButton>
     </Tooltip>
   );
