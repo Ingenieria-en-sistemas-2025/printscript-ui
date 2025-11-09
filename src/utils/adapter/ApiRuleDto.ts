@@ -13,13 +13,22 @@ export const toUiRule = (r: ApiRuleDto): Rule => ({
 });
 
 export const toApiRules = (rules: Rule[]): ApiRuleDto[] =>
-  rules.map((r) => ({
-    id: r.id,
-    enabled: !!r.isActive,
-    value:
-      typeof r.value === "number"
-        ? r.value
-        : typeof r.value === "string" && r.value.trim() !== ""
-          ? Number(r.value)
-          : undefined,
-  }));
+    rules.map((r) => {
+        if (r.id === "IdentifierStyleRuleStreaming") {
+            return {
+                id: r.id,
+                enabled: !!r.isActive,
+                value: typeof r.value === "string" ? r.value.toUpperCase() : undefined,
+            };
+        }
+        return {
+            id: r.id,
+            enabled: !!r.isActive,
+            value:
+                typeof r.value === "number"
+                    ? r.value
+                    : typeof r.value === "string" && r.value.trim() !== ""
+                        ? Number(r.value)
+                        : undefined,
+        };
+    });
