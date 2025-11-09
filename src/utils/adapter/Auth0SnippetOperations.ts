@@ -250,4 +250,30 @@ export class Auth0SnippetOperations implements SnippetOperations {
         return this.getLintingRules();
     }
 
+
+    async downloadSnippet(snippetId: string, formatted = false): Promise<void> {
+        const url = `${API_BASE_URL}/snippets/${snippetId}/download?formatted=${formatted}`;
+        const token = await this.getAccessTokenSilently({
+            authorizationParams: { audience: AUD, scope: SCOPE },
+        });
+
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
+
+        const cd = res.headers.get("content-disposition") ?? "";
+        const match = /filename="([^"]+)"/i.exec(cd);
+        const filename = match?.[1] ?? `snippet-${snippetId}.prs`;
+
+        const blob = await res.blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(link.href);
+    }
 }

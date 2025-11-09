@@ -31,7 +31,7 @@ const DownloadButton = ({ snippet }: { snippet?: Snippet }) => {
     <Tooltip title={"Download"}>
       <IconButton sx={{ cursor: "pointer" }}>
         <a
-          download={`${snippet.name}.${snippet.extension}`}
+          download={`${snippet.name}.${snippet.extension || "prs"}`}
           target="_blank"
           rel="noreferrer"
           href={URL.createObjectURL(file)}
