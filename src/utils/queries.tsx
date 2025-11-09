@@ -192,6 +192,15 @@ export const useDeleteSnippet = ({onSuccess}: {onSuccess: () => void}) => {
   );
 }
 
+export const useCreateSnippetFromFile = ({ onSuccess }: { onSuccess: () => void }) => {
+  const ops = useSnippetsOperations();
+
+  return useMutation<Snippet, Error, { meta: CreateSnippet; file: File }>(
+    ({ meta, file }) => ops.createSnippetFromFile(meta, file),
+    { onSuccess }
+  );
+};
+
 
 export const useGetFileTypes = () => {
   const snippetOperations = useSnippetsOperations()

@@ -17,7 +17,7 @@ import {AddSnippetModal} from "./AddSnippetModal.tsx";
 import {useRef, useState} from "react";
 import {Add, Search} from "@mui/icons-material";
 import {LoadingSnippetRow, SnippetRow} from "./SnippetRow.tsx";
-import {CreateSnippetWithLang, getFileLanguage, Snippet} from "../../utils/snippet.ts";
+import {getFileLanguage, Snippet, SnippetDraft} from "../../utils/snippet.ts";
 import {usePaginationContext} from "../../contexts/paginationContext.tsx";
 import {useSnackbarContext} from "../../contexts/snackbarContext.tsx";
 import {useGetFileTypes} from "../../utils/queries.tsx";
@@ -33,7 +33,7 @@ export const SnippetTable = (props: SnippetTableProps) => {
   const {snippets, handleClickSnippet, loading,handleSearchSnippet} = props;
   const [addModalOpened, setAddModalOpened] = useState(false);
   const [popoverMenuOpened, setPopoverMenuOpened] = useState(false)
-  const [snippet, setSnippet] = useState<CreateSnippetWithLang | undefined>()
+  const [snippet, setSnippet] = useState<SnippetDraft | undefined>();
 
   const popoverRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,13 +55,15 @@ export const SnippetTable = (props: SnippetTableProps) => {
       return
     }
     file.text().then((text) => {
-        setSnippet({
-            name: splitName[0],
-            content: text,
-            language: fileType.language,
-            version: (fileType.versions?.[0] ?? "1.0"),
-            extension: fileType.extension,
-        });
+      setSnippet({
+        name: splitName[0],
+        content: text,
+        language: fileType.language,
+        version: (fileType.versions?.[0] ?? "1.0"),
+        extension: fileType.extension,
+        source: 'FILE_UPLOAD',
+        file,
+      });
     }).catch(e => {
       console.error(e)
     }).finally(() => {
@@ -130,8 +132,15 @@ export const SnippetTable = (props: SnippetTableProps) => {
         <AddSnippetModal defaultSnippet={snippet} open={addModalOpened}
                          onClose={() => setAddModalOpened(false)}/>
         <Menu anchorEl={popoverRef.current} open={popoverMenuOpened} onClick={handleClickMenu}>
-          <MenuItem onClick={() => setAddModalOpened(true)}>Create snippet</MenuItem>
-          <MenuItem onClick={() => inputRef?.current?.click()}>Load snippet from file</MenuItem>
+          <MenuItem onClick={() => {
+            setSnippet(undefined);
+            setAddModalOpened(true);
+          }}>
+            Create snippet
+          </MenuItem>
+          <MenuItem onClick={() => inputRef?.current?.click()}>
+            Load snippet from file
+          </MenuItem>
         </Menu>
         <input hidden type={"file"} ref={inputRef} multiple={false} data-testid={"upload-file-input"}
                onChange={e => handleLoadSnippet(e?.target)}/>

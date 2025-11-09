@@ -18,6 +18,8 @@ export type CreateSnippet = {
   source?: 'INLINE' | 'FILE_UPLOAD';
 }
 
+export type SnippetDraft = CreateSnippet & { file?: File };
+
 export type CreateSnippetWithLang = CreateSnippet & { language: string }
 
 export type UpdateSnippet = {

@@ -78,6 +78,29 @@ export class Auth0SnippetOperations implements SnippetOperations {
         return response.json();
     }
 
+    async createSnippetFromFile(meta: CreateSnippet, file: File): Promise<Snippet> {
+        const token = await this.getAccessTokenSilently({
+            authorizationParams: { audience: AUD, scope: SCOPE },
+        });
+
+        const form = new FormData();
+        form.append('meta', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+        form.append('file', file, file.name);
+
+        const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+        const res = await fetch(`${base}/snippets/file`, {
+            method: 'POST',
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            body: form,
+        });
+
+        if (!res.ok) {
+            const txt = await res.text().catch(() => '');
+            throw new Error(`HTTP ${res.status} /snippets/file -> ${txt}`);
+        }
+        return res.json();
+    }
+
     async getSnippetById(id: string): Promise<Snippet | undefined> {
         try {
             const response = await this.fetchWithAuth(

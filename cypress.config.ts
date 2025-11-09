@@ -11,14 +11,14 @@ export default defineConfig({
         },
         env: {
             FRONTEND_URL: process.env.VITE_FRONTEND_URL!,
-            BACKEND_URL: process.env.VITE_FRONTEND_URL!,
+            BACKEND_URL: process.env.CYPRESS_BACKEND_URL || process.env.VITE_FRONTEND_URL!,
             AUTH0_USERNAME: process.env.VITE_AUTH0_USERNAME,
             AUTH0_PASSWORD: process.env.VITE_AUTH0_PASSWORD,
 
             auth0_domain: process.env.VITE_AUTH0_DOMAIN,
             AUTH0_URL: process.env.VITE_AUTH0_URL,
             client_id: process.env.VITE_AUTH0_CLIENT_ID,
-            client_secret: process.env.VITE_CLIENT_SECRET,
+            client_secret: process.env.VITE_REACT_APP_CLIENT_SECRET,
             auth0_audience: process.env.VITE_AUTH0_AUDIENCE!
         },
         experimentalStudio: true,

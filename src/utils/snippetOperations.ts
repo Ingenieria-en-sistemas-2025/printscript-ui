@@ -10,6 +10,8 @@ export interface SnippetOperations {
 
   createSnippet(createSnippet: CreateSnippet): Promise<Snippet>
 
+  createSnippetFromFile(meta: CreateSnippet, file: File): Promise<Snippet>;
+
   getSnippetById(id: string): Promise<Snippet | undefined>
 
   updateSnippetById(id: string, updateSnippet: UpdateSnippet): Promise<Snippet>
