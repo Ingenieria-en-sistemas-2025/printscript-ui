@@ -132,7 +132,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
     async shareSnippet(snippetId: string, userId: string, permissionType: string): Promise<Snippet> {
         const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/api/share`,
+            `${API_BASE_URL}/snippets/share`,
             {
                 method: 'POST',
                 body: JSON.stringify({ snippetId, userId, permissionType }),
