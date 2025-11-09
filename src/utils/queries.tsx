@@ -66,11 +66,10 @@ export const useGetUsers = (name: string = "", page: number = 0, pageSize: numbe
 };
 
 export const useShareSnippet = () => {
-  const snippetOperations = useSnippetsOperations()
-
-  return useMutation<Snippet, Error, { snippetId: string; userId: string }>(
-      ({snippetId, userId}) => snippetOperations.shareSnippet(snippetId, userId)
-  );
+    const snippetOperations = useSnippetsOperations()
+    return useMutation<Snippet, Error, { snippetId: string; userId: string; permissionType: string }>(
+        ({snippetId, userId, permissionType}) => snippetOperations.shareSnippet(snippetId, userId, permissionType)
+    );
 };
 
 

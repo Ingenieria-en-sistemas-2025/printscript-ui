@@ -80,9 +80,13 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     }
   }, [formatSnippetData]);
 
-  async function handleShareSnippet(userId: string) {
-    shareSnippet({ snippetId: id, userId });
-  }
+    async function handleShareSnippet(userId: string, permissionType: string) {
+        shareSnippet({
+            snippetId: id,
+            userId: userId,
+            permissionType: permissionType
+        })
+    }
 
   return (
     <Box p={4} minWidth={"60vw"}>
