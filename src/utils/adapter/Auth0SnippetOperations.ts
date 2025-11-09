@@ -226,7 +226,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
         return res.json();
     }
 
-    async modifyFormatRule(newRules: Rule[], configText?: string, configFormat?: string): Promise<Rule[]> {
+    async modifyFormatRule(newRules: Rule[], configText = "{}", configFormat = "json"): Promise<Rule[]> {
         await this.fetchWithAuth(`${API_BASE_URL}/snippets/rules/format`, {
             method: 'PUT',
             body: JSON.stringify({
@@ -238,7 +238,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
         return this.getFormatRules();
     }
 
-    async modifyLintingRule(newRules: Rule[], configText?: string, configFormat?: string): Promise<Rule[]> {
+    async modifyLintingRule(newRules: Rule[], configText = "{}", configFormat = "json"): Promise<Rule[]> {
         await this.fetchWithAuth(`${API_BASE_URL}/snippets/rules/linting`, {
             method: 'PUT',
             body: JSON.stringify({
