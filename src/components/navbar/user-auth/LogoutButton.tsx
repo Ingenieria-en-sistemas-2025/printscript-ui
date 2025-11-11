@@ -6,9 +6,7 @@ const LogoutButton = () => {
 
     return (
         <Button
-            onClick={() => {
-                logout({ logoutParams: { returnTo: window.location.origin } });
-            }}
+          onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
             variant="contained"
             size="small"
             sx={{
@@ -21,7 +19,7 @@ const LogoutButton = () => {
                 },
             }}
         >
-            LOG OUT
+            Log Out
         </Button>
     );
 };
