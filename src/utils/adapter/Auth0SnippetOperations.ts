@@ -302,10 +302,10 @@ export class Auth0SnippetOperations implements SnippetOperations {
     }
 
     async runSnippet(snippetId: string, inputs?: string[]): Promise<RunRes> {
-        const body: RunInputsReq = {inputs};
+        const body: RunInputsReq = { inputs: inputs ?? [] };
         const res = await this.fetchWithAuth(
           `${API_BASE_URL}/snippets/${snippetId}/run`,
-          {method: "POST", body: JSON.stringify(body)}
+          { method: "POST", body: JSON.stringify(body) }
         );
         return res.json();
     }
