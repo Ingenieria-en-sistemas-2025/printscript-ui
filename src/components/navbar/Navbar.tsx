@@ -29,23 +29,30 @@ export const Navbar = () => {
     const { isAuthenticated } = useAuth0(); // estado de autenticacion
 
     return (
-        <AppBar position="static" elevation={0}>
+        <AppBar
+            position="static"
+            elevation={0}
+            sx={{
+                backgroundColor: '#e91e63',
+            }}
+        >
             <Container maxWidth="xl">
-                <Toolbar disableGutters sx={{display: "flex", gap: "24px"}}>
+                <Toolbar disableGutters sx={{ display: "flex", gap: "24px" }}>
                     <Typography
                         variant="h6"
                         noWrap
                         component="a"
                         sx={{
-                            display: {xs: 'none', md: 'flex'},
+                            display: { xs: 'none', md: 'flex' },
                             fontWeight: 700,
-                            color: 'inherit',
+                            color: 'white',
                             textDecoration: 'none',
                         }}
                     >
                         Printscript
                     </Typography>
-                    <Box sx={{flexGrow: 1, display: {xs: 'none', md: 'flex'}, gap: '4px'}}>
+
+                    <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: '4px' }}>
                         {pages.map((page) => (
                             <Button
                                 key={page.title}
@@ -56,10 +63,10 @@ export const Navbar = () => {
                                     display: 'flex',
                                     justifyContent: "center",
                                     gap: "4px",
-                                    backgroundColor: location.pathname === page.path ? 'primary.light' : 'transparent',
+                                    backgroundColor: location.pathname === page.path ? '#f06292' : 'transparent',
                                     "&:hover": {
-                                        backgroundColor: 'primary.dark'
-                                    }
+                                        backgroundColor: '#ad1457',
+                                    },
                                 }}
                             >
                                 {page.icon}
@@ -74,7 +81,7 @@ export const Navbar = () => {
                                 <LogoutButton />
                             </>
                         ) : (
-                            <LoginButton /> // Si no esa autenticado, muestra el login
+                            <LoginButton />
                         )}
                     </Box>
                 </Toolbar>
