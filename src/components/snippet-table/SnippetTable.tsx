@@ -90,11 +90,25 @@ export const SnippetTable = (props: SnippetTableProps) => {
               <Search/>
             </IconButton>
           </Box>
-          <Button ref={popoverRef} variant="contained" disableRipple sx={{boxShadow: 0}}
-                  onClick={() => setPopoverMenuOpened(true)}>
-            <Add/>
-            Add Snippet
-          </Button>
+            <Button
+                ref={popoverRef}
+                variant="contained"
+                disableRipple
+                sx={{
+                    boxShadow: 0,
+                    backgroundColor: "#f8bbd0",
+                    color: '#ad1457',
+                    fontWeight: 600,
+                    textTransform: "none",
+                    "&:hover": {
+                        backgroundColor: "#f48fb1",
+                    },
+                }}
+                onClick={() => setPopoverMenuOpened(true)}
+            >
+                <Add sx={{ mr: 0.5 }} />
+                Add Snippet
+            </Button>
         </Box>
         <Table size="medium" sx={{borderSpacing: "0 10px", borderCollapse: "separate"}}>
             <TableHead>
