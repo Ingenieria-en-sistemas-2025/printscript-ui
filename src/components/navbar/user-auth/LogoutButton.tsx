@@ -12,10 +12,13 @@ const LogoutButton = () => {
             variant="contained"
             size="small"
             sx={{
-                backgroundColor: 'primary.light',
+                backgroundColor: '#e91e63',
+                color: 'white',
+                fontWeight: 600,
+                textTransform: 'none',
                 "&:hover": {
-                    backgroundColor: 'primary.main'
-                }
+                    backgroundColor: '#ad1457',
+                },
             }}
         >
             Log Out
