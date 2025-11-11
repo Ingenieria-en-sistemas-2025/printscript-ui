@@ -7,7 +7,7 @@ import { FileType } from "../../types/FileType.ts";
 import { Rule } from "../../types/Rule.ts";
 import type { GetTokenSilentlyOptions } from '@auth0/auth0-react';
 import { ApiRuleDto, toUiRule, toApiRules } from "./ApiRuleDto";
-import {RunRes} from "../execution.ts";
+import {RunInputsReq, RunRes} from "../execution.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/";
 const AUD = import.meta.env.VITE_AUTH0_AUDIENCE;
@@ -28,7 +28,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
         try {
             const token = await this.getAccessTokenSilently({
-                authorizationParams: { audience: AUD, scope: SCOPE },
+                authorizationParams: {audience: AUD, scope: SCOPE},
             });
             if (token && token !== 'undefined' && token !== 'null') {
                 headers['Authorization'] = `Bearer ${token}`;
@@ -37,10 +37,10 @@ export class Auth0SnippetOperations implements SnippetOperations {
         }
 
         const url = path.startsWith('http')
-            ? path
-            : `${(import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
+          ? path
+          : `${(import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
 
-        const res = await fetch(url, { ...options, headers });
+        const res = await fetch(url, {...options, headers});
         if (!res.ok) {
             const t = await res.text().catch(() => '');
             throw new Error(`HTTP ${res.status} ${url} -> ${t}`);
@@ -49,9 +49,9 @@ export class Auth0SnippetOperations implements SnippetOperations {
     }
 
     async listSnippetDescriptors(
-        page: number,
-        pageSize: number,
-        snippetName?: string
+      page: number,
+      pageSize: number,
+      snippetName?: string
     ): Promise<PaginatedSnippets> {
         const params = new URLSearchParams({
             page: page.toString(),
@@ -63,35 +63,35 @@ export class Auth0SnippetOperations implements SnippetOperations {
         }
 
         const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/all?${params.toString()}`
+          `${API_BASE_URL}/snippets/all?${params.toString()}`
         );
         return response.json();
     }
 
     async createSnippet(createSnippet: CreateSnippet): Promise<Snippet> {
         const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets`,
-            {
-                method: 'POST',
-                body: JSON.stringify(createSnippet),
-            }
+          `${API_BASE_URL}/snippets`,
+          {
+              method: 'POST',
+              body: JSON.stringify(createSnippet),
+          }
         );
         return response.json();
     }
 
     async createSnippetFromFile(meta: CreateSnippet, file: File): Promise<Snippet> {
         const token = await this.getAccessTokenSilently({
-            authorizationParams: { audience: AUD, scope: SCOPE },
+            authorizationParams: {audience: AUD, scope: SCOPE},
         });
 
         const form = new FormData();
-        form.append('meta', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+        form.append('meta', new Blob([JSON.stringify(meta)], {type: 'application/json'}));
         form.append('file', file, file.name);
 
         const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
         const res = await fetch(`${base}/snippets/file`, {
             method: 'POST',
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            headers: token ? {Authorization: `Bearer ${token}`} : undefined,
             body: form,
         });
 
@@ -105,7 +105,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
     async getSnippetById(id: string): Promise<Snippet | undefined> {
         try {
             const response = await this.fetchWithAuth(
-                `${API_BASE_URL}/snippets/${id}`
+              `${API_BASE_URL}/snippets/${id}`
             );
             return response.json();
         } catch (error) {
@@ -116,19 +116,19 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
     async updateSnippetById(id: string, updateSnippet: UpdateSnippet): Promise<Snippet> {
         const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/${id}`,
-            {
-                method: 'PUT',
-                body: JSON.stringify(updateSnippet),
-            }
+          `${API_BASE_URL}/snippets/${id}`,
+          {
+              method: 'PUT',
+              body: JSON.stringify(updateSnippet),
+          }
         );
         return response.json();
     }
 
     async getUserFriends(
-        name?: string,
-        page?: number,
-        pageSize?: number
+      name?: string,
+      page?: number,
+      pageSize?: number
     ): Promise<PaginatedUsers> {
         const params = new URLSearchParams();
 
@@ -141,7 +141,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
 
         const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/api/users?${params.toString()}`
+          `${API_BASE_URL}/api/users?${params.toString()}`
         );
 
         const usersArray: User[] = await response.json();
@@ -156,11 +156,11 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
     async shareSnippet(snippetId: string, userId: string, permissionType: string): Promise<Snippet> {
         const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/share`,
-            {
-                method: 'POST',
-                body: JSON.stringify({ snippetId, userId, permissionType }),
-            }
+          `${API_BASE_URL}/snippets/share`,
+          {
+              method: 'POST',
+              body: JSON.stringify({snippetId, userId, permissionType}),
+          }
         );
         return response.json();
     }
@@ -179,14 +179,14 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
     async getFileTypes(): Promise<FileType[]> {
         const response = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/config/filetypes`
+          `${API_BASE_URL}/snippets/config/filetypes`
         );
         return response.json();
     }
 
     async getTestCases(snippetId: string): Promise<TestCase[]> {
         const res = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/${snippetId}/tests`
+          `${API_BASE_URL}/snippets/${snippetId}/tests`
         );
         return res.json();
     }
@@ -208,18 +208,18 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
     async removeTestCase(testCaseId: string): Promise<string> {
         await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/tests/${testCaseId}`,
-            { method: 'DELETE' }
+          `${API_BASE_URL}/snippets/tests/${testCaseId}`,
+          {method: 'DELETE'}
         );
         return testCaseId;
     }
 
     async deleteSnippet(id: string): Promise<string> {
         await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/${id}`,
-            {
-                method: 'DELETE',
-            }
+          `${API_BASE_URL}/snippets/${id}`,
+          {
+              method: 'DELETE',
+          }
         );
         return id;
     }
@@ -228,7 +228,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
     async formatSnippet(snippetId: string): Promise<Snippet> {
         const res = await this.fetchWithAuth(
           `${API_BASE_URL}/snippets/run/${snippetId}/format`,
-          { method: "POST" }
+          {method: "POST"}
         );
         return res.json();
     }
@@ -236,7 +236,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
     async lintSnippetById(snippetId: string): Promise<Snippet> {
         const res = await this.fetchWithAuth(
           `${API_BASE_URL}/snippets/run/${snippetId}/lint`,
-          { method: "POST" }
+          {method: "POST"}
         );
         return res.json();
     }
@@ -244,8 +244,8 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
     async testSnippet(snippetId: string, testCaseId: string): Promise<TestCaseResult> {
         const res = await this.fetchWithAuth(
-            `${API_BASE_URL}/snippets/${snippetId}/tests/${testCaseId}/run`,
-            { method: 'POST' },
+          `${API_BASE_URL}/snippets/${snippetId}/tests/${testCaseId}/run`,
+          {method: 'POST'},
         );
         return res.json();
     }
@@ -278,10 +278,10 @@ export class Auth0SnippetOperations implements SnippetOperations {
     async downloadSnippet(snippetId: string, formatted = false): Promise<void> {
         const url = `${API_BASE_URL}/snippets/${snippetId}/download?formatted=${formatted}`;
         const token = await this.getAccessTokenSilently({
-            authorizationParams: { audience: AUD, scope: SCOPE },
+            authorizationParams: {audience: AUD, scope: SCOPE},
         });
 
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(url, {headers: {Authorization: `Bearer ${token}`}});
 
         if (!res.ok) {
             throw new Error(`HTTP ${res.status}`);
@@ -302,13 +302,11 @@ export class Auth0SnippetOperations implements SnippetOperations {
     }
 
     async runSnippet(snippetId: string, inputs?: string[]): Promise<RunRes> {
+        const body: RunInputsReq = {inputs};
         const res = await this.fetchWithAuth(
           `${API_BASE_URL}/snippets/${snippetId}/run`,
-          {
-              method: "POST",
-              body: JSON.stringify({ inputs }), // envía {} si inputs es undefined
-          }
+          {method: "POST", body: JSON.stringify(body)}
         );
-        return res.json(); // { outputs: string[] }
+        return res.json();
     }
 }

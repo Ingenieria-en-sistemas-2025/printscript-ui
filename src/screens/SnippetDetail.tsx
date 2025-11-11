@@ -4,16 +4,15 @@ import { highlight, languages } from "prismjs";
 import "prismjs/components/prism-clike";
 import "prismjs/components/prism-javascript";
 import "prismjs/themes/prism-okaidia.css";
-import { Alert, Box, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
+import {Alert, Box, CircularProgress, IconButton, TextField, Tooltip, Typography} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import {useUpdateSnippetById, useGetUsers, useSnippetsOperations} from "../utils/queries.tsx";
+import {useUpdateSnippetById, useGetUsers, useSnippetsOperations, useRunSnippet} from "../utils/queries.tsx";
 import { useFormatSnippet, useGetSnippetById, useShareSnippet } from "../utils/queries.tsx";
 import { Bòx } from "../components/snippet-table/SnippetBox.tsx";
-import { BugReport, Delete, Download, Save, Share } from "@mui/icons-material";
+import {BugReport, Delete, Download, PlayArrow, Save, Share} from "@mui/icons-material";
 import { ShareSnippetModal } from "../components/snippet-detail/ShareSnippetModal.tsx";
 import { TestSnippetModal } from "../components/snippet-test/TestSnippetModal.tsx";
 import { Snippet } from "../utils/snippet.ts";
-import { SnippetExecution } from "./SnippetExecution.tsx";
 import ReadMoreIcon from "@mui/icons-material/ReadMore";
 import { queryClient } from "../App.tsx";
 import { DeleteConfirmationModal } from "../components/snippet-detail/DeleteConfirmationModal.tsx";
@@ -50,6 +49,8 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const { id, handleCloseModal } = props;
 
   const [code, setCode] = useState("");
+  const [inputsText, setInputsText] = useState("");
+  const [outputs, setOutputs] = useState<string[]>([]);
 
   const [shareModalOppened, setShareModalOppened] = useState(false);
   const [deleteConfirmationModalOpen, setDeleteConfirmationModalOpen] = useState(false);
@@ -57,6 +58,8 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
 
   const { data: snippet, isLoading } = useGetSnippetById(id);
   const { mutate: shareSnippet, isLoading: loadingShare } = useShareSnippet();
+  const runMutation = useRunSnippet(id);
+
 
   const {
     mutate: formatSnippet,
@@ -90,6 +93,24 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         })
     }
 
+  const handleRun = () => {
+    const inputs = inputsText
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    runMutation.mutate(
+      { inputs },
+      {
+        onSuccess: (res) => setOutputs(res.outputs ?? []),
+        onError: (e) => {
+          console.error(e);
+          setOutputs([`<error> ${(e as Error).message}`]);
+        },
+      }
+    );
+  };
+
   return (
     <Box p={4} minWidth={"60vw"}>
       <Box width={"100%"} p={2} display={"flex"} justifyContent={"flex-end"}>
@@ -120,10 +141,15 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
             </Tooltip>
             <DownloadButton snippet={snippet} />
 
-            {/* TODO: live mode */}
             <Tooltip title={"Format"}>
               <IconButton onClick={() => formatSnippet()} disabled={isFormatLoading}>
                 <ReadMoreIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title={"Run"}>
+              <IconButton onClick={handleRun} disabled={runMutation.isLoading}>
+                {runMutation.isLoading ? <CircularProgress size={20} /> : <PlayArrow />}
               </IconButton>
             </Tooltip>
 
@@ -142,6 +168,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
               </IconButton>
             </Tooltip>
           </Box>
+
           <Box display={"flex"} gap={2}>
             <Bòx
               flex={1}
@@ -166,9 +193,35 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
               />
             </Bòx>
           </Box>
+
           <Box pt={1} flex={1} marginTop={2}>
             <Alert severity="info">Output</Alert>
-            <SnippetExecution />
+
+            <Box
+              flex={1}
+              height={"fit-content"}
+              minHeight={"140px"}
+              bgcolor={"black"}
+              color={"white"}
+              sx={{ p: 2, whiteSpace: "pre-wrap", fontFamily: "monospace" }}
+            >
+              {outputs.length ? (
+                outputs.join("\n")
+              ) : (
+                <span style={{ opacity: 0.5 }}>—</span>
+              )}
+            </Box>
+
+            <TextField
+              placeholder="Type your inputs here"
+              value={inputsText}
+              onChange={(e) => setInputsText(e.target.value)}
+              fullWidth
+              multiline
+              minRows={2}
+              sx={{ mt: 1 }}
+              helperText="Cada línea se envía como un input separado"
+            />
           </Box>
         </>
       )}
@@ -182,7 +235,11 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         usersLoading={loadingUsers}
       />
 
-      <TestSnippetModal open={testModalOpened} onClose={() => setTestModalOpened(false)} snippetId={id} />
+      <TestSnippetModal
+        open={testModalOpened}
+        onClose={() => setTestModalOpened(false)}
+        snippetId={id}
+      />
 
       <DeleteConfirmationModal
         open={deleteConfirmationModalOpen}
