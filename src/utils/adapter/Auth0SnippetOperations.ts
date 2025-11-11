@@ -7,6 +7,7 @@ import { FileType } from "../../types/FileType.ts";
 import { Rule } from "../../types/Rule.ts";
 import type { GetTokenSilentlyOptions } from '@auth0/auth0-react';
 import { ApiRuleDto, toUiRule, toApiRules } from "./ApiRuleDto";
+import {RunRes} from "../execution.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/";
 const AUD = import.meta.env.VITE_AUTH0_AUDIENCE;
@@ -298,5 +299,16 @@ export class Auth0SnippetOperations implements SnippetOperations {
         link.click();
         link.remove();
         URL.revokeObjectURL(link.href);
+    }
+
+    async runSnippet(snippetId: string, inputs?: string[]): Promise<RunRes> {
+        const res = await this.fetchWithAuth(
+          `${API_BASE_URL}/snippets/${snippetId}/run`,
+          {
+              method: "POST",
+              body: JSON.stringify({ inputs }), // envía {} si inputs es undefined
+          }
+        );
+        return res.json(); // { outputs: string[] }
     }
 }

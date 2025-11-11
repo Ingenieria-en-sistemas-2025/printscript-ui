@@ -4,6 +4,7 @@ import {TestCase} from "../types/TestCase.ts";
 import {TestCaseResult} from "./queries.tsx";
 import {FileType} from "../types/FileType.ts";
 import {Rule} from "../types/Rule.ts";
+import {RunRes} from "./execution.ts";
 
 export interface SnippetOperations {
   listSnippetDescriptors(page: number,pageSize: number,sippetName?: string): Promise<PaginatedSnippets>
@@ -45,4 +46,6 @@ export interface SnippetOperations {
   modifyLintingRule(newRules: Rule[], configText?: string, configFormat?: string): Promise<Rule[]>
 
   downloadSnippet(snippetId: string, formatted?: boolean): Promise<void>
+
+  runSnippet(snippetId: string, inputs?: string[]): Promise<RunRes>;
 }

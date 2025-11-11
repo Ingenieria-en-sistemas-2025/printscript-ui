@@ -8,6 +8,7 @@ import {Rule} from "../types/Rule.ts";
 import {Auth0SnippetOperations} from "./adapter/Auth0SnippetOperations";
 import {useAuth0} from "@auth0/auth0-react";
 import {useEffect} from "react";
+import {RunRes} from "./execution.ts";
 
 
 export const useSnippetsOperations = () => {
@@ -207,3 +208,10 @@ export const useGetFileTypes = () => {
 
   return useQuery<FileType[], Error>('fileTypes', () => snippetOperations.getFileTypes());
 }
+
+export const useRunSnippet = (snippetId: string) => {
+  const ops = useSnippetsOperations();
+  return useMutation<RunRes, Error, { inputs?: string[] }>(
+    (vars) => ops.runSnippet(snippetId, vars?.inputs)
+  );
+};
