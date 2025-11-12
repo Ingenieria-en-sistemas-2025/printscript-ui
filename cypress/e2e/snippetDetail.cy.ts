@@ -1,4 +1,3 @@
-// cypress/e2e/snippetDetail.cy.ts
 describe('Add snippet tests', () => {
   const FRONTEND = Cypress.env('FRONTEND_URL') || '/';
   const BACKEND  = Cypress.env('BACKEND_URL');
@@ -76,9 +75,7 @@ describe('Add snippet tests', () => {
       .contains('admin@gmail.com')
       .click();
 
-    // Confirmar (ya está habilitado)
-    cy.get('div[role="dialog"]', { timeout: 10000 })
-      .contains('button', /^share$/i)
+    cy.get('[data-testid="share-confirm-btn"]', { timeout: 10000 })
       .should('be.visible')
       .and('not.be.disabled')
       .click();
