@@ -55,7 +55,12 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
             <Divider/>
             <Box mt={2}>
                 <Autocomplete
-                    renderInput={(params) => <TextField {...params} label="Select user to share with"/>}
+                    renderInput={(params) => <TextField {...params} label="Select user to share with"
+                                                        inputProps={{
+                                                            ...params.inputProps,
+                                                            'data-testid': 'share-user-input',
+                                                        }}
+                    />}
                     options={users ?? []}
                     isOptionEqualToValue={(option, value) =>
                         option.userId === value.userId
@@ -74,9 +79,12 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
                         label="Access Type"
                         onChange={(e) => setPermission(e.target.value as string)}
                         disabled={!selectedUser}
+                        data-testid="share-permission-select"
                     >
                         {PERMISSION_TYPES.map(p => (
-                            <MenuItem key={p.value} value={p.value}>{p.label}</MenuItem>
+                          <MenuItem key={p.value} value={p.value} data-testid={`perm-${p.value}`}>
+                              {p.label}
+                          </MenuItem>
                         ))}
                     </Select>
                 </FormControl>
@@ -88,7 +96,8 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
                         disabled={!selectedUser || loading || usersLoading}
                         onClick={handleFinalShare}
                         sx={{marginLeft: 2}}
-                        variant={"contained"}
+                        variant="contained"
+                        data-testid="share-confirm-btn"
                     >
                         Share
                     </Button>
