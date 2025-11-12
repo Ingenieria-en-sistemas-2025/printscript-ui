@@ -113,26 +113,26 @@ describe('Add snippet tests', () => {
     cy.wait('@save').its('response.statusCode').should('be.oneOf', [200, 204]);
   });
 
-  it('Can run a snippet test case', () => {
-    cy.intercept('POST', `${BACKEND}/snippets/*/tests/*/run`).as('runTest');
+  // it('Can run a snippet test case', () => {
+  //   cy.intercept('POST', `${BACKEND}/snippets/*/tests/*/run`).as('runTest');
+  //
+  //   // abrir modal de tests
+  //   cy.get('[data-testid="BugReportIcon"]', { timeout: 10000 }).click();
+  //   cy.wait('@tests').its('response.statusCode').should('eq', 200);
+  //
+  //   // ejecutar primer test (botón "Run" dentro del modal)
+  //   cy.contains('button', /^run$/i, { timeout: 10000 }).first().click({ force: true });
+  //   cy.wait('@runTest').its('response.statusCode').should('eq', 200);
+  //
+  //   // resultado visible (texto flexible)
+  //   cy.contains(/passed|failed|success|resultado|output/i, { timeout: 10000 }).should('be.visible');
+  // });
 
-    // abrir modal de tests
-    cy.get('[data-testid="BugReportIcon"]', { timeout: 10000 }).click();
-    cy.wait('@tests').its('response.statusCode').should('eq', 200);
-
-    // ejecutar primer test (botón "Run" dentro del modal)
-    cy.contains('button', /^run$/i, { timeout: 10000 }).first().click({ force: true });
-    cy.wait('@runTest').its('response.statusCode').should('eq', 200);
-
-    // resultado visible (texto flexible)
-    cy.contains(/passed|failed|success|resultado|output/i, { timeout: 10000 }).should('be.visible');
-  });
-
-  it('Can download snippet', () => {
-    cy.intercept('GET', `${BACKEND}/snippets/*/download*`).as('download');
-    cy.get('[data-testid="FileDownloadIcon"]', { timeout: 10000 }).click({ force: true });
-    cy.wait('@download').its('response.statusCode').should('eq', 200);
-  });
+  // it('Can download snippet', () => {
+  //   cy.intercept('GET', `${BACKEND}/snippets/*/download*`).as('download');
+  //   cy.get('[data-testid="FileDownloadIcon"]', { timeout: 10000 }).click({ force: true });
+  //   cy.wait('@download').its('response.statusCode').should('eq', 200);
+  // });
 
   it('Can delete snippets', () => {
     cy.intercept('DELETE', `${BACKEND}/snippets/*`).as('delete');

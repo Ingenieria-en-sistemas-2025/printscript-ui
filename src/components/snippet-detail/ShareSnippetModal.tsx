@@ -50,59 +50,59 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
     }
 
     return (
-        <ModalWrapper open={open} onClose={onClose}>
-            <Typography variant={"h5"}>Share your snippet</Typography>
-            <Divider/>
-            <Box mt={2}>
-                <Autocomplete
-                    renderInput={(params) => <TextField {...params} label="Select user to share with"
-                                                        inputProps={{
-                                                            ...params.inputProps,
-                                                            'data-testid': 'share-user-input',
-                                                        }}
-                    />}
-                    options={users ?? []}
-                    isOptionEqualToValue={(option, value) =>
-                        option.userId === value.userId
-                    }
-                    getOptionLabel={(option) => `${option.name} (${option.email})`}
-                    loading={loading || usersLoading}
-                    value={selectedUser}
-                    onChange={(_: unknown, newValue: User | null) => handleSelectUser(newValue)}
-                />
+      <ModalWrapper open={open} onClose={onClose}>
+          <Typography variant={"h5"}>Share your snippet</Typography>
+          <Divider/>
+          <Box mt={2}>
+              <Autocomplete
+                renderInput={(params) => <TextField {...params} label="Select user to share with"
+                                                    inputProps={{
+                                                        ...params.inputProps,
+                                                        'data-testid': 'share-user-input',
+                                                    }}
+                />}
+                options={users ?? []}
+                isOptionEqualToValue={(option, value) =>
+                  option.userId === value.userId
+                }
+                getOptionLabel={(option) => `${option.name} (${option.email})`}
+                loading={loading || usersLoading}
+                value={selectedUser}
+                onChange={(_: unknown, newValue: User | null) => handleSelectUser(newValue)}
+              />
 
-                <FormControl fullWidth sx={{ marginTop: 3 }}>
-                    <InputLabel id="permission-select-label">Access Type</InputLabel>
-                    <Select
-                        labelId="permission-select-label"
-                        value={permission}
-                        label="Access Type"
-                        onChange={(e) => setPermission(e.target.value as string)}
-                        disabled={!selectedUser}
-                        data-testid="share-permission-select"
-                    >
-                        {PERMISSION_TYPES.map(p => (
-                          <MenuItem key={p.value} value={p.value} data-testid={`perm-${p.value}`}>
-                              {p.label}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
+              <FormControl fullWidth sx={{ marginTop: 3 }}>
+                  <InputLabel id="permission-select-label">Access Type</InputLabel>
+                  <Select
+                    labelId="permission-select-label"
+                    value={permission}
+                    label="Access Type"
+                    onChange={(e) => setPermission(e.target.value as string)}
+                    disabled={!selectedUser}
+                    data-testid="share-permission-select"
+                  >
+                      {PERMISSION_TYPES.map(p => (
+                        <MenuItem key={p.value} value={p.value} data-testid={`perm-${p.value}`}>
+                            {p.label}
+                        </MenuItem>
+                      ))}
+                  </Select>
+              </FormControl>
 
-                <Box mt={4} display={"flex"} width={"100%"} justifyContent={"flex-end"}>
-                    <Button onClick={onClose} variant={"outlined"}>Cancel</Button>
+              <Box mt={4} display={"flex"} width={"100%"} justifyContent={"flex-end"}>
+                  <Button onClick={onClose} variant={"outlined"}>Cancel</Button>
 
-                    <Button
-                        disabled={!selectedUser || loading || usersLoading}
-                        onClick={handleFinalShare}
-                        sx={{marginLeft: 2}}
-                        variant="contained"
-                        data-testid="share-confirm-btn"
-                    >
-                        Share
-                    </Button>
-                </Box>
-            </Box>
-        </ModalWrapper>
+                  <Button
+                    disabled={!selectedUser || loading || usersLoading}
+                    onClick={handleFinalShare}
+                    sx={{marginLeft: 2}}
+                    variant="contained"
+                    data-testid="share-confirm-btn"
+                  >
+                      Share
+                  </Button>
+              </Box>
+          </Box>
+      </ModalWrapper>
     )
 }
