@@ -8,16 +8,10 @@ describe('Home', () => {
         )
     })
 
-    // before(() => {
-    //   process.env.FRONTEND_URL = Cypress.env("FRONTEND_URL");
-    //   process.env.BACKEND_URL = Cypress.env("BACKEND_URL");
-    // })
-
     it('Renders home', () => {
         // Usamos Cypress.env() para cy.visit
         cy.visit(Cypress.env("FRONTEND_URL"))
 
-        /* ==== Generated with Cypress Studio ==== */
         cy.get('.MuiTypography-h6').should('have.text', 'Printscript');
         cy.get('.MuiBox-root > .MuiInputBase-root > .MuiInputBase-input').should('be.visible');
         cy.get('.css-9jay18 > .MuiButton-root').should('be.visible');

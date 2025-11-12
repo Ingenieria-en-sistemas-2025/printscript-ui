@@ -1,16 +1,17 @@
-import {BACKEND_URL} from "../../src/utils/constants";
-import {Auth0SnippetOperations} from "../../src/utils/adapter/Auth0SnippetOperations";
+import {AUTH0_PASSWORD, AUTH0_USERNAME, BACKEND_URL} from "../../src/utils/constants";
+import {FakeSnippetStore} from "../../src/utils/mock/fakeSnippetStore";
 
 describe('Add snippet tests', () => {
-  const adapter = new Auth0SnippetOperations()
+  const fakeStore = new FakeSnippetStore()
   beforeEach(() => {
     // cy.loginToAuth0(
+
     //     AUTH0_USERNAME,
     //     AUTH0_PASSWORD
     // )
     cy.intercept('GET', BACKEND_URL+"/snippets/*", {
       statusCode: 201,
-      body: adapter.getSnippetById("1"),
+      body: fakeStore.getSnippetById("1"),
     }).as("getSnippetById")
     cy.intercept('GET', BACKEND_URL+"/snippets").as("getSnippets")
 
