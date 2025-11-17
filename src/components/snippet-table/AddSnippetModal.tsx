@@ -32,6 +32,7 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     const [version, setVersion]   = useState(defaultSnippet?.version  ?? "1.1");
     const [code, setCode] = useState(defaultSnippet?.content ?? "");
     const [snippetName, setSnippetName] = useState(defaultSnippet?.name ?? "")
+    const [validationError, setValidationError] = useState<string | null> (null);
 
     const {mutateAsync: createSnippet, isLoading: loadingSnippet} = useCreateSnippet({
         onSuccess: () => queryClient.invalidateQueries('listSnippets')
@@ -61,6 +62,8 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     }, [defaultSnippet]);
 
     const handleCreateSnippet = async () => {
+        setValidationError(null)
+
         const newSnippet: CreateSnippet = {
             name: snippetName,
             content: code,
@@ -69,12 +72,24 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
             extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs",
             source: defaultSnippet?.source ?? "INLINE"
         };
-        if (defaultSnippet?.file && defaultSnippet.source === "FILE_UPLOAD") {
-          await createSnippetFromFile({ meta: newSnippet, file: defaultSnippet.file });
-        } else {
-          await createSnippet(newSnippet);
+        try {
+            if (defaultSnippet?.file && defaultSnippet.source === "FILE_UPLOAD") {
+                await createSnippetFromFile({ meta: newSnippet, file: defaultSnippet.file });
+            } else {
+                await createSnippet(newSnippet);
+            }
+            onClose();
+
+        } catch (err: any) {
+            const diag = err?.diagnostics?.[0]
+            if (diag) {
+                setValidationError(
+                    `Regla: ${diag.ruleId} – ${diag.message} (línea ${diag.line}, columna ${diag.col})`
+                );
+            } else {
+                setValidationError(err?.message ?? "Error creando snippet");
+            }
         }
-        onClose();
       };
 
 
@@ -100,6 +115,15 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
           </Button>
         </Box>
       }
+
+        {validationError && (
+            <Box mt={2}>
+                <Typography color="error" sx={{ fontWeight: "bold" }}>
+                    {validationError}
+                </Typography>
+            </Box>
+        )}
+
       <Box sx={{
         display: 'flex',
         flexDirection: 'column',

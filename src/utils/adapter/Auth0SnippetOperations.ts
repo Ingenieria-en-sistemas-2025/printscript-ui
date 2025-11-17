@@ -8,6 +8,7 @@ import { Rule } from "../../types/Rule.ts";
 import type { GetTokenSilentlyOptions } from '@auth0/auth0-react';
 import { ApiRuleDto, toUiRule, toApiRules } from "./ApiRuleDto";
 import {RunInputsReq, RunRes} from "../execution.ts";
+import {ApiErrorWithDiagnostics} from "../../types/Error";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/";
 const AUD = import.meta.env.VITE_AUTH0_AUDIENCE;
@@ -21,14 +22,19 @@ export class Auth0SnippetOperations implements SnippetOperations {
     }
 
     private async fetchWithAuth(path: string, options: RequestInit = {}): Promise<Response> {
+        const isFormData = options.body instanceof FormData;
+
         const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
             ...(options.headers as Record<string, string>),
         };
 
+        if (!isFormData) {
+            headers['Content-Type'] = 'application/json';
+        }
+
         try {
             const token = await this.getAccessTokenSilently({
-                authorizationParams: {audience: AUD, scope: SCOPE},
+                authorizationParams: { audience: AUD, scope: SCOPE },
             });
             if (token && token !== 'undefined' && token !== 'null') {
                 headers['Authorization'] = `Bearer ${token}`;
@@ -37,13 +43,29 @@ export class Auth0SnippetOperations implements SnippetOperations {
         }
 
         const url = path.startsWith('http')
-          ? path
-          : `${(import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
+            ? path
+            : `${(import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')}${
+                path.startsWith('/') ? '' : '/'
+            }${path}`;
 
         const res = await fetch(url, {...options, headers});
+
         if (!res.ok) {
-            const t = await res.text().catch(() => '');
-            throw new Error(`HTTP ${res.status} ${url} -> ${t}`);
+
+            const raw = await res.text().catch(() => '');
+            let parsed: any = undefined;
+            try {
+                parsed = raw ? JSON.parse(raw) : undefined;
+            } catch {
+                // body no era json
+            }
+            const err: any = new Error(parsed?.message || `HTTP ${res.status} ${url}`) as ApiErrorWithDiagnostics;
+            err.status = res.status;
+            if (parsed?.code) err.code = parsed.code;
+            if (Array.isArray(parsed?.diagnostics)) {
+                err.diagnostics = parsed.diagnostics;
+            }
+            throw err
         }
         return res;
     }
@@ -80,26 +102,17 @@ export class Auth0SnippetOperations implements SnippetOperations {
     }
 
     async createSnippetFromFile(meta: CreateSnippet, file: File): Promise<Snippet> {
-        const token = await this.getAccessTokenSilently({
-            authorizationParams: {audience: AUD, scope: SCOPE},
-        });
-
         const form = new FormData();
         form.append('meta', new Blob([JSON.stringify(meta)], {type: 'application/json'}));
         form.append('file', file, file.name);
 
-        const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
-        const res = await fetch(`${base}/snippets/file`, {
-            method: 'POST',
-            headers: token ? {Authorization: `Bearer ${token}`} : undefined,
-            body: form,
-        });
-
-        if (!res.ok) {
-            const txt = await res.text().catch(() => '');
-            throw new Error(`HTTP ${res.status} /snippets/file -> ${txt}`);
-        }
-        return res.json();
+        const response = await this.fetchWithAuth(
+            `${API_BASE_URL}/snippets/file`, {
+                method: 'POST',
+                body: form
+            }
+        )
+        return response.json()
     }
 
     async getSnippetById(id: string): Promise<Snippet | undefined> {
@@ -131,21 +144,15 @@ export class Auth0SnippetOperations implements SnippetOperations {
       pageSize?: number
     ): Promise<PaginatedUsers> {
         const params = new URLSearchParams();
-
         const currentPage = page ?? 0;
         const currentPageSize = pageSize ?? 10;
-
         if (name) params.append('name', name);
         params.append('page', currentPage.toString());
         params.append('size', currentPageSize.toString());
-
-
         const response = await this.fetchWithAuth(
           `${API_BASE_URL}/snippets/users?${params.toString()}`
         );
-
         const usersArray: User[] = await response.json();
-
         return {
             page: currentPage,
             page_size: currentPageSize,

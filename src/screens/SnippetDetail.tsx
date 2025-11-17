@@ -58,6 +58,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
 
   const { data: snippet, isLoading } = useGetSnippetById(id);
   const { mutate: shareSnippet, isLoading: loadingShare } = useShareSnippet();
+  const [validationError, setValidationError] = useState<string | null>(null);
   const runMutation = useRunSnippet(id);
 
 
@@ -67,11 +68,15 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     data: formatSnippetData,
   } = useFormatSnippet(id);
 
-  const { mutate: updateSnippet, isLoading: isUpdateSnippetLoading } = useUpdateSnippetById({
-    onSuccess: () => queryClient.invalidateQueries(["snippet", id]),
-  });
+    const { mutate: updateSnippet, isLoading: isUpdateSnippetLoading } =
+        useUpdateSnippetById({
+            onSuccess: () => {
+                setValidationError(null);
+                queryClient.invalidateQueries(["snippet", id]);
+            },
+        });
 
-  const { data: usersData, isLoading: loadingUsers } = useGetUsers();
+    const { data: usersData, isLoading: loadingUsers } = useGetUsers();
 
   useEffect(() => {
     if (snippet) {
@@ -153,15 +158,33 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
               </IconButton>
             </Tooltip>
 
-            <Tooltip title={"Save changes"}>
-              <IconButton
-                color={"primary"}
-                onClick={() => updateSnippet({ id: id, updateSnippet: { content: code } })}
-                disabled={isUpdateSnippetLoading || snippet?.content === code}
-              >
-                <Save />
-              </IconButton>
-            </Tooltip>
+              <Tooltip title={"Save changes"}>
+                  <IconButton
+                      color={"primary"}
+                      onClick={() =>
+                          updateSnippet(
+                              { id: id, updateSnippet: { content: code } },
+                              {
+                                  onError: (error: any) => {
+                                      const e = error as { message?: string; diagnostics?: any[] };
+                                      const diag = e.diagnostics?.[0];
+
+                                      if (diag) {
+                                          setValidationError(
+                                              `Regla: ${diag.ruleId} – ${diag.message} (línea ${diag.line}, columna ${diag.col})`
+                                          );
+                                      } else {
+                                          setValidationError(e.message ?? "Error al guardar el snippet");
+                                      }
+                                  },
+                              },
+                          )
+                      }
+                      disabled={isUpdateSnippetLoading || snippet?.content === code}
+                  >
+                      <Save />
+                  </IconButton>
+              </Tooltip>
             <Tooltip title={"Delete"}>
               <IconButton onClick={() => setDeleteConfirmationModalOpen(true)}>
                 <Delete color={"error"} />
@@ -179,6 +202,13 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
               color={"white"}
               code={code}
             >
+
+                {validationError && (
+                    <Box mt={2}>
+                        <Alert severity="error">{validationError}</Alert>
+                    </Box>
+                )}
+
               <Editor
                 value={code}
                 padding={10}
