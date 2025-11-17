@@ -143,8 +143,8 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         <Box
             p={4}
             sx={{
-                width: { xs: "95vw", md: "80vw" },
-                maxWidth: 1100,
+                width: { xs: "90vw", sm: "75vw", md: "60vw" },
+                maxWidth: 900,
                 bgcolor: "background.paper",
                 borderRadius: 2,
                 boxShadow: 6,

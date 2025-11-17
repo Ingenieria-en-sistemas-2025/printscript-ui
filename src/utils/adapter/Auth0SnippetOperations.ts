@@ -27,11 +27,9 @@ export class Auth0SnippetOperations implements SnippetOperations {
         const headers: Record<string, string> = {
             ...(options.headers as Record<string, string>),
         };
-
-        if (!isFormData) {
-            headers['Content-Type'] = 'application/json';
+        if (!isFormData && options.body !== undefined) {
+            headers["Content-Type"] = "application/json";
         }
-
         try {
             const token = await this.getAccessTokenSilently({
                 authorizationParams: { audience: AUD, scope: SCOPE },
@@ -39,8 +37,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
             if (token && token !== 'undefined' && token !== 'null') {
                 headers['Authorization'] = `Bearer ${token}`;
             }
-        } catch {
-        }
+        } catch {}
 
         const url = path.startsWith('http')
             ? path
@@ -283,16 +280,9 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
 
     async downloadSnippet(snippetId: string, formatted = false): Promise<void> {
-        const url = `${API_BASE_URL}/snippets/${snippetId}/download?formatted=${formatted}`;
-        const token = await this.getAccessTokenSilently({
-            authorizationParams: {audience: AUD, scope: SCOPE},
-        });
-
-        const res = await fetch(url, {headers: {Authorization: `Bearer ${token}`}});
-
-        if (!res.ok) {
-            throw new Error(`HTTP ${res.status}`);
-        }
+        const res = await this.fetchWithAuth(
+            `${API_BASE_URL}/snippets/${snippetId}/download?formatted=${formatted}`
+        );
 
         const cd = res.headers.get("content-disposition") ?? "";
         const match = /filename="([^"]+)"/i.exec(cd);
