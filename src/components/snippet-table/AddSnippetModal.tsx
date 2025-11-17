@@ -8,47 +8,63 @@ import {
     MenuItem,
     Select,
     SelectChangeEvent,
-    Typography
+    Typography,
+    Alert,
 } from "@mui/material";
-import {highlight, languages} from "prismjs";
-import {useEffect, useState} from "react";
+import { highlight, languages } from "prismjs";
+import { useEffect, useState } from "react";
 import Editor from "react-simple-code-editor";
 
 import "prismjs/components/prism-clike";
 import "prismjs/components/prism-javascript";
 import "prismjs/themes/prism-okaidia.css";
-import {Save} from "@mui/icons-material";
-import {CreateSnippet, SnippetDraft} from "../../utils/snippet.ts";
-import {ModalWrapper} from "../common/ModalWrapper.tsx";
-import {useCreateSnippet, useCreateSnippetFromFile, useGetFileTypes} from "../../utils/queries.tsx";
-import {queryClient} from "../../App.tsx";
+import { Save } from "@mui/icons-material";
+import { CreateSnippet, SnippetDraft } from "../../utils/snippet.ts";
+import { ModalWrapper } from "../common/ModalWrapper.tsx";
+import {
+    useCreateSnippet,
+    useCreateSnippetFromFile,
+    useGetFileTypes,
+} from "../../utils/queries.tsx";
+import { queryClient } from "../../App.tsx";
 
-export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
-    open: boolean,
-    onClose: () => void,
-  defaultSnippet?: SnippetDraft
+export const AddSnippetModal = ({
+                                    open,
+                                    onClose,
+                                    defaultSnippet,
+                                }: {
+    open: boolean;
+    onClose: () => void;
+    defaultSnippet?: SnippetDraft;
 }) => {
-    const [language, setLanguage] = useState(defaultSnippet?.language ?? "printscript");
-    const [version, setVersion]   = useState(defaultSnippet?.version  ?? "1.1");
+    const [language, setLanguage] = useState(
+        defaultSnippet?.language ?? "printscript"
+    );
+    const [version, setVersion] = useState(defaultSnippet?.version ?? "1.1");
     const [code, setCode] = useState(defaultSnippet?.content ?? "");
-    const [snippetName, setSnippetName] = useState(defaultSnippet?.name ?? "")
-    const [validationError, setValidationError] = useState<string | null> (null);
+    const [snippetName, setSnippetName] = useState(defaultSnippet?.name ?? "");
+    const [validationError, setValidationError] = useState<string | null>(null);
 
-    const {mutateAsync: createSnippet, isLoading: loadingSnippet} = useCreateSnippet({
-        onSuccess: () => queryClient.invalidateQueries('listSnippets')
-    })
-    const {mutateAsync: createSnippetFromFile, isLoading: loadingFile} = useCreateSnippetFromFile({
-      onSuccess: () => queryClient.invalidateQueries('listSnippets')
-    })
+    const { mutateAsync: createSnippet, isLoading: loadingSnippet } =
+        useCreateSnippet({
+            onSuccess: () => queryClient.invalidateQueries("listSnippets"),
+        });
 
-    const {data: fileTypes} = useGetFileTypes();
+    const { mutateAsync: createSnippetFromFile, isLoading: loadingFile } =
+        useCreateSnippetFromFile({
+            onSuccess: () => queryClient.invalidateQueries("listSnippets"),
+        });
+
+    const { data: fileTypes } = useGetFileTypes();
     const saving = loadingSnippet || loadingFile;
 
     useEffect(() => {
         if (!fileTypes) return;
-        const ft = fileTypes.find(f => f.language === language);
+        const ft = fileTypes.find((f) => f.language === language);
         if (ft?.versions?.length) {
-            setVersion(prev => ft.versions.includes(prev) ? prev : ft.versions[0]);
+            setVersion((prev) =>
+                ft.versions.includes(prev) ? prev : ft.versions[0]
+            );
         }
     }, [language, fileTypes]);
 
@@ -62,16 +78,18 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     }, [defaultSnippet]);
 
     const handleCreateSnippet = async () => {
-        setValidationError(null)
+        setValidationError(null);
 
         const newSnippet: CreateSnippet = {
             name: snippetName,
             content: code,
             language,
             version,
-            extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs",
-            source: defaultSnippet?.source ?? "INLINE"
+            extension:
+                fileTypes?.find((f) => f.language === language)?.extension ?? "prs",
+            source: defaultSnippet?.source ?? "INLINE",
         };
+
         try {
             if (defaultSnippet?.file && defaultSnippet.source === "FILE_UPLOAD") {
                 await createSnippetFromFile({ meta: newSnippet, file: defaultSnippet.file });
@@ -79,9 +97,8 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                 await createSnippet(newSnippet);
             }
             onClose();
-
         } catch (err: any) {
-            const diag = err?.diagnostics?.[0]
+            const diag = err?.diagnostics?.[0];
             if (diag) {
                 setValidationError(
                     `Regla: ${diag.ruleId} – ${diag.message} (línea ${diag.line}, columna ${diag.col})`
@@ -90,108 +107,162 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                 setValidationError(err?.message ?? "Error creando snippet");
             }
         }
-      };
+    };
 
+    return (
+        <ModalWrapper open={open} onClose={onClose}>
+            <Box
+                sx={{
+                    maxWidth: { xs: "90vw", md: "70vw" },
+                    maxHeight: "80vh",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                    p: 3,
+                    bgcolor: "background.paper",
+                    borderRadius: 2,
+                    boxShadow: 6,
+                    overflowY: "auto",
+                }}
+            >
+                {/* Header */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        mb: 1,
+                    }}
+                >
+                    <Typography id="modal-modal-title" variant="h5" component="h2">
+                        Add Snippet
+                    </Typography>
+                    <Button
+                        disabled={!snippetName || !code || !language || saving}
+                        variant="contained"
+                        disableRipple
+                        sx={{ boxShadow: 0 }}
+                        onClick={handleCreateSnippet}
+                    >
+                        <Box
+                            pr={1}
+                            display={"flex"}
+                            alignItems={"center"}
+                            justifyContent={"center"}
+                        >
+                            {saving ? <CircularProgress size={24} /> : <Save />}
+                        </Box>
+                        Save Snippet
+                    </Button>
+                </Box>
 
-  return (
-    <ModalWrapper open={open} onClose={onClose}>
-      {
-        <Box sx={{display: 'flex', flexDirection: "row", justifyContent: "space-between"}}>
-          <Typography id="modal-modal-title" variant="h5" component="h2"
-                      sx={{display: 'flex', alignItems: 'center'}}>
-            Add Snippet
-          </Typography>
-          <Button
-            disabled={!snippetName || !code || !language || saving}
-            variant="contained"
-            disableRipple
-            sx={{boxShadow: 0}}
-            onClick={handleCreateSnippet}
-          >
-            <Box pr={1} display={"flex"} alignItems={"center"} justifyContent={"center"}>
-              {saving ? <CircularProgress size={24}/> : <Save/>}
+                {validationError && (
+                    <Alert severity="error">{validationError}</Alert>
+                )}
+
+                {/* Name */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px",
+                    }}
+                >
+                    <InputLabel htmlFor="name">Name</InputLabel>
+                    <Input
+                        onChange={(e) => setSnippetName(e.target.value)}
+                        value={snippetName}
+                        id="name"
+                        sx={{ width: { xs: "100%", md: "60%" } }}
+                    />
+                </Box>
+
+                {/* Language */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px",
+                    }}
+                >
+                    <InputLabel htmlFor="language">Language</InputLabel>
+                    <Select
+                        id="language"
+                        value={language}
+                        onChange={(e: SelectChangeEvent<string>) =>
+                            setLanguage(e.target.value)
+                        }
+                        sx={{ width: { xs: "100%", md: "60%" } }}
+                    >
+                        {fileTypes?.map((x) => (
+                            <MenuItem
+                                data-testid={`menu-option-${x.language}`}
+                                key={x.language}
+                                value={x.language}
+                            >
+                                {capitalize(x.language)}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </Box>
+
+                {/* Version */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px",
+                    }}
+                >
+                    <InputLabel>Version</InputLabel>
+                    <Select
+                        value={version}
+                        onChange={(e: SelectChangeEvent<string>) =>
+                            setVersion(e.target.value)
+                        }
+                        sx={{ width: { xs: "100%", md: "60%" } }}
+                    >
+                        {(fileTypes?.find((f) => f.language === language)?.versions ?? []).map(
+                            (v) => (
+                                <MenuItem key={v} value={v}>
+                                    {v}
+                                </MenuItem>
+                            )
+                        )}
+                    </Select>
+                </Box>
+
+                {/* Code editor */}
+                <Box>
+                    <InputLabel sx={{ mb: 1 }}>Code Snippet</InputLabel>
+                    <Box
+                        width={"100%"}
+                        sx={{
+                            backgroundColor: "black",
+                            color: "white",
+                            borderRadius: "8px",
+                        }}
+                    >
+                        <Editor
+                            value={code}
+                            padding={10}
+                            data-testid={"add-snippet-code-editor"}
+                            onValueChange={(code) => setCode(code)}
+                            highlight={(code) => highlight(code, languages.js, "javascript")}
+                            style={{
+                                borderRadius: "8px",
+                                overflow: "auto",
+                                minHeight: "220px",
+                                maxHeight: "50vh",
+                                width: "100%",
+                                fontFamily: "monospace",
+                                fontSize: 17,
+                            }}
+                        />
+                    </Box>
+                </Box>
             </Box>
-            Save Snippet
-          </Button>
-        </Box>
-      }
-
-        {validationError && (
-            <Box mt={2}>
-                <Typography color="error" sx={{ fontWeight: "bold" }}>
-                    {validationError}
-                </Typography>
-            </Box>
-        )}
-
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px'
-      }}>
-        <InputLabel htmlFor="name">Name</InputLabel>
-        <Input onChange={e => setSnippetName(e.target.value)} value={snippetName} id="name"
-               sx={{width: '50%'}}/>
-      </Box>
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px'
-      }}>
-        <InputLabel htmlFor="name">Language</InputLabel>
-        <Select
-          labelId="demo-simple-select-label"
-          id="demo-simple-select"
-          value={language}
-          label="Age"
-          onChange={(e: SelectChangeEvent<string>) => setLanguage(e.target.value)}
-          sx={{width: '50%'}}
-        >
-          {
-            fileTypes?.map(x => (
-              <MenuItem data-testid={`menu-option-${x.language}`} key={x.language}
-                        value={x.language}>{capitalize((x.language))}</MenuItem>
-            ))
-          }
-        </Select>
-      </Box>
-
-      {/* Version */}
-      <Box sx={{ display:'flex', flexDirection:'column', gap:'16px' }}>
-        <InputLabel>Version</InputLabel>
-        <Select
-          value={version}
-          onChange={(e: SelectChangeEvent<string>) => setVersion(e.target.value)}
-          sx={{ width:'50%' }}
-        >
-          {(fileTypes?.find(f => f.language === language)?.versions ?? []).map(v => (
-            <MenuItem key={v} value={v}>{v}</MenuItem>
-          ))}
-        </Select>
-      </Box>
-
-      <InputLabel>Code Snippet</InputLabel>
-      <Box width={"100%"} sx={{
-        backgroundColor: 'black', color: 'white', borderRadius: "8px",
-      }}>
-        <Editor
-          value={code}
-          padding={10}
-          data-testid={"add-snippet-code-editor"}
-          onValueChange={(code) => setCode(code)}
-          highlight={(code) => highlight(code, languages.js, 'javascript')}
-          style={{
-            borderRadius: "8px",
-            overflow: "auto",
-            minHeight: "300px",
-            maxHeight: "600px",
-            width: "100%",
-            fontFamily: "monospace",
-            fontSize: 17,
-          }}
-        />
-      </Box>
-    </ModalWrapper>
-  )
-}
-
+        </ModalWrapper>
+    );
+};
