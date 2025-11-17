@@ -141,23 +141,19 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
 
     return (
         <Box
-            p={3}
+            p={4}
             sx={{
-                minWidth: { xs: "90vw", md: "70vw" },
-                maxWidth: "90vw",
-                maxHeight: "80vh",
+                width: { xs: "95vw", md: "80vw" },
+                maxWidth: 1100,
                 bgcolor: "background.paper",
                 borderRadius: 2,
                 boxShadow: 6,
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
             }}
         >
             {/* Header con botón de cierre */}
             <Box
                 width={"100%"}
-                mb={1}
+                mb={2}
                 display={"flex"}
                 justifyContent={"flex-end"}
                 alignItems="center"
@@ -165,188 +161,173 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 <CloseIcon style={{ cursor: "pointer" }} onClick={handleCloseModal} />
             </Box>
 
-            {/* Contenido scrolleable */}
-            <Box
-                sx={{
-                    flex: 1,
-                    overflowY: "auto",
-                    pr: 1,
-                }}
-            >
-                {isLoading || loadingUsers ? (
+            {isLoading || loadingUsers ? (
+                <>
+                    <Typography fontWeight={"bold"} mb={2} variant="h4">
+                        Loading...
+                    </Typography>
+                    <CircularProgress />
+                </>
+            ) : (
+                <>
+                    <Typography variant="h4" fontWeight={"bold"} mb={1}>
+                        {snippet?.name ?? "Snippet"}
+                    </Typography>
+
+                    {/* Barra de acciones */}
                     <Box
                         display="flex"
-                        flexDirection="column"
-                        alignItems="center"
-                        justifyContent="center"
-                        height="100%"
+                        flexWrap="wrap"
+                        flexDirection="row"
+                        gap={1}
+                        padding="8px 0"
+                        mb={1}
                     >
-                        <Typography fontWeight={"bold"} mb={2} variant="h4">
-                            Loading...
-                        </Typography>
-                        <CircularProgress />
-                    </Box>
-                ) : (
-                    <>
-                        <Typography variant="h5" fontWeight={"bold"} mb={1}>
-                            {snippet?.name ?? "Snippet"}
-                        </Typography>
+                        <Tooltip title={"Share"}>
+                            <IconButton onClick={() => setShareModalOppened(true)}>
+                                <Share />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title={"Test"}>
+                            <IconButton onClick={() => setTestModalOpened(true)}>
+                                <BugReport />
+                            </IconButton>
+                        </Tooltip>
+                        <DownloadButton snippet={snippet} />
 
-                        {/* Actions */}
-                        <Box
-                            display="flex"
-                            flexWrap="wrap"
-                            flexDirection="row"
-                            gap={1}
-                            mb={2}
-                        >
-                            <Tooltip title={"Share"}>
-                                <IconButton onClick={() => setShareModalOppened(true)}>
-                                    <Share />
-                                </IconButton>
-                            </Tooltip>
-                            <Tooltip title={"Test"}>
-                                <IconButton onClick={() => setTestModalOpened(true)}>
-                                    <BugReport />
-                                </IconButton>
-                            </Tooltip>
-                            <DownloadButton snippet={snippet} />
-
-                            <Tooltip title={"Format"}>
-                                <IconButton
-                                    onClick={() => formatSnippet()}
-                                    disabled={isFormatLoading}
-                                >
-                                    <ReadMoreIcon />
-                                </IconButton>
-                            </Tooltip>
-
-                            <Tooltip title={"Run"}>
-                                <IconButton onClick={handleRun} disabled={runMutation.isLoading}>
-                                    {runMutation.isLoading ? (
-                                        <CircularProgress size={20} />
-                                    ) : (
-                                        <PlayArrow />
-                                    )}
-                                </IconButton>
-                            </Tooltip>
-
-                            <Tooltip title={"Save changes"}>
-                                <IconButton
-                                    color={"primary"}
-                                    onClick={() =>
-                                        updateSnippet(
-                                            { id: id, updateSnippet: { content: code } },
-                                            {
-                                                onError: (error: any) => {
-                                                    const e = error as {
-                                                        message?: string;
-                                                        diagnostics?: any[];
-                                                    };
-                                                    const diag = e.diagnostics?.[0];
-
-                                                    if (diag) {
-                                                        setValidationError(
-                                                            `Regla: ${diag.ruleId} – ${diag.message} (línea ${diag.line}, columna ${diag.col})`
-                                                        );
-                                                    } else {
-                                                        setValidationError(
-                                                            e.message ?? "Error al guardar el snippet"
-                                                        );
-                                                    }
-                                                },
-                                            }
-                                        )
-                                    }
-                                    disabled={isUpdateSnippetLoading || snippet?.content === code}
-                                >
-                                    <Save />
-                                </IconButton>
-                            </Tooltip>
-
-                            <Tooltip title={"Delete"}>
-                                <IconButton
-                                    onClick={() => setDeleteConfirmationModalOpen(true)}
-                                >
-                                    <Delete color={"error"} />
-                                </IconButton>
-                            </Tooltip>
-                        </Box>
-
-                        {/* Editor + error */}
-                        <Box display={"flex"} gap={2} mb={2}>
-                            <Bòx
-                                flex={1}
-                                height={"fit-content"}
-                                overflow={"hidden"}
-                                minHeight={"300px"}
-                                bgcolor={"black"}
-                                color={"white"}
-                                code={code}
+                        <Tooltip title={"Format"}>
+                            <IconButton
+                                onClick={() => formatSnippet()}
+                                disabled={isFormatLoading}
                             >
-                                {validationError && (
-                                    <Box mt={1} mb={1}>
-                                        <Alert severity="error">{validationError}</Alert>
-                                    </Box>
-                                )}
+                                <ReadMoreIcon />
+                            </IconButton>
+                        </Tooltip>
 
-                                <Editor
-                                    value={code}
-                                    padding={10}
-                                    onValueChange={(code) => setCode(code)}
-                                    highlight={(code) => highlight(code, languages.js, "javascript")}
-                                    maxLength={1000}
-                                    style={{
-                                        minHeight: "260px",
-                                        maxHeight: "50vh",
-                                        overflow: "auto",
-                                        fontFamily: "monospace",
-                                        fontSize: 17,
-                                    }}
-                                />
-                            </Bòx>
-                        </Box>
-
-                        {/* Output + inputs */}
-                        <Box pt={1} flex={1} mb={1}>
-                            <Alert severity="info">Output</Alert>
-
-                            <Box
-                                flex={1}
-                                height={"fit-content"}
-                                minHeight={"120px"}
-                                maxHeight={"30vh"}
-                                bgcolor={"black"}
-                                color={"white"}
-                                sx={{
-                                    p: 2,
-                                    mt: 1,
-                                    whiteSpace: "pre-wrap",
-                                    fontFamily: "monospace",
-                                    overflowY: "auto",
-                                }}
-                            >
-                                {outputs.length ? (
-                                    outputs.join("\n")
+                        <Tooltip title={"Run"}>
+                            <IconButton onClick={handleRun} disabled={runMutation.isLoading}>
+                                {runMutation.isLoading ? (
+                                    <CircularProgress size={20} />
                                 ) : (
-                                    <span style={{ opacity: 0.5 }}>—</span>
+                                    <PlayArrow />
                                 )}
-                            </Box>
+                            </IconButton>
+                        </Tooltip>
 
-                            <TextField
-                                placeholder="Type your inputs here"
-                                value={inputsText}
-                                onChange={(e) => setInputsText(e.target.value)}
-                                fullWidth
-                                multiline
-                                minRows={2}
-                                sx={{ mt: 1 }}
-                                helperText="Cada línea se envía como un input separado"
-                            />
+                        <Tooltip title={"Save changes"}>
+                            <IconButton
+                                color={"primary"}
+                                onClick={() =>
+                                    updateSnippet(
+                                        { id: id, updateSnippet: { content: code } },
+                                        {
+                                            onError: (error: any) => {
+                                                const e = error as {
+                                                    message?: string;
+                                                    diagnostics?: any[];
+                                                };
+                                                const diag = e.diagnostics?.[0];
+
+                                                if (diag) {
+                                                    setValidationError(
+                                                        `Regla: ${diag.ruleId} – ${diag.message} (línea ${diag.line}, columna ${diag.col})`
+                                                    );
+                                                } else {
+                                                    setValidationError(
+                                                        e.message ?? "Error al guardar el snippet"
+                                                    );
+                                                }
+                                            },
+                                        }
+                                    )
+                                }
+                                disabled={isUpdateSnippetLoading || snippet?.content === code}
+                            >
+                                <Save />
+                            </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title={"Delete"}>
+                            <IconButton
+                                onClick={() => setDeleteConfirmationModalOpen(true)}
+                            >
+                                <Delete color={"error"} />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+
+                    {/* Error de validación prolijo */}
+                    {validationError && (
+                        <Box mb={2}>
+                            <Alert severity="error">{validationError}</Alert>
                         </Box>
-                    </>
-                )}
-            </Box>
+                    )}
+
+                    {/* Editor */}
+                    <Box display={"flex"} gap={2}>
+                        <Bòx
+                            flex={1}
+                            height={"fit-content"}
+                            overflow={"hidden"}
+                            minHeight={"400px"}
+                            bgcolor={"black"}
+                            color={"white"}
+                            code={code}
+                        >
+                            <Editor
+                                value={code}
+                                padding={10}
+                                onValueChange={(code) => setCode(code)}
+                                highlight={(code) => highlight(code, languages.js, "javascript")}
+                                maxLength={1000}
+                                style={{
+                                    minHeight: "360px",
+                                    maxHeight: "500px",
+                                    overflow: "auto",
+                                    fontFamily: "monospace",
+                                    fontSize: 17,
+                                }}
+                            />
+                        </Bòx>
+                    </Box>
+
+                    {/* Output + inputs */}
+                    <Box pt={2} flex={1} marginTop={2}>
+                        <Alert severity="info">Output</Alert>
+
+                        <Box
+                            flex={1}
+                            height={"fit-content"}
+                            minHeight={"140px"}
+                            bgcolor={"black"}
+                            color={"white"}
+                            sx={{
+                                p: 2,
+                                whiteSpace: "pre-wrap",
+                                fontFamily: "monospace",
+                                mt: 1,
+                            }}
+                        >
+                            {outputs.length ? (
+                                outputs.join("\n")
+                            ) : (
+                                <span style={{ opacity: 0.5 }}>—</span>
+                            )}
+                        </Box>
+
+                        <TextField
+                            placeholder="Type your inputs here"
+                            value={inputsText}
+                            onChange={(e) => setInputsText(e.target.value)}
+                            fullWidth
+                            multiline
+                            minRows={2}
+                            sx={{ mt: 1 }}
+                            helperText="Cada línea se envía como un input separado"
+                        />
+                    </Box>
+                </>
+            )}
 
             {/* Modales secundarios */}
             <ShareSnippetModal
