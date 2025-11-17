@@ -33,7 +33,7 @@ describe('Add snippet tests', () => {
     cy.intercept('GET', `${BACKEND}/snippets/config/filetypes`).as('filetypes');
     cy.intercept('GET', `${BACKEND}/snippets/all*`).as('list');
 
-    cy.intercept('GET', `${BACKEND}/api/users*`, [
+    cy.intercept('GET', `${BACKEND}/snippets/users*`, [
       { userId: 'admin-id', name: 'admin@gmail.com', email: 'admin@gmail.com' },
       { userId: 'dev-id',   name: 'developer@gmail.com', email: 'developer@gmail.com' },
     ]).as('users');

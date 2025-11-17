@@ -141,7 +141,7 @@ export class Auth0SnippetOperations implements SnippetOperations {
 
 
         const response = await this.fetchWithAuth(
-          `${API_BASE_URL}/api/users?${params.toString()}`
+          `${API_BASE_URL}/snippets/users?${params.toString()}`
         );
 
         const usersArray: User[] = await response.json();
