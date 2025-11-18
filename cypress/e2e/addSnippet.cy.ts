@@ -19,7 +19,7 @@ describe('Add snippet tests', () => {
 
         cy.get('#name').clear().type(`Some snippet name ${Date.now()}`);
 
-        cy.get('#demo-simple-select').click();
+        cy.get('#language').click();
         cy.get('[data-testid="menu-option-printscript"]').click();
 
         cy.get('[data-testid="add-snippet-code-editor"]')
