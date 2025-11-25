@@ -2,32 +2,10 @@ describe('Add snippet tests', () => {
   const FRONTEND = Cypress.env('FRONTEND_URL') || '/';
   const BACKEND  = Cypress.env('BACKEND_URL');
 
-  const waitList200 = () => {
-    let attempts = 0; const maxAttempts = 5;
-    function again() {
-      attempts++;
-      cy.wait('@list', { timeout: 20000 }).then(({ response }) => {
-        const status = response?.statusCode ?? 0;
-        cy.log(`Intento ${attempts}: /snippets/all → ${status}`);
-        if (status === 200) {
-          cy.get('[data-testid="snippet-row"]', { timeout: 15000 })
-            .should('have.length.greaterThan', 0)
-            .and('have.length.lessThan', 50);
-        } else if (attempts < maxAttempts) {
-          cy.wait(2000).then(again);
-        } else {
-          throw new Error(`/snippets/all falló después de ${maxAttempts} intentos (último status: ${status})`);
-        }
-      });
-    }
-    again();
-  };
-
   beforeEach(() => {
     cy.loginToAuth0(
       Cypress.env('AUTH0_USERNAME'),
       Cypress.env('AUTH0_PASSWORD')
-
     );
 
     cy.intercept('GET', `${BACKEND}/snippets/config/filetypes`).as('filetypes');
@@ -42,19 +20,25 @@ describe('Add snippet tests', () => {
       expect(req.body).to.have.keys(['snippetId', 'userId', 'permissionType']);
       req.reply({
         statusCode: 200,
-        body: {}, // si tu backend real devuelve 204, igual mockeá 200 con body para que .json() no rompa
+        body: {},
       });
     }).as('shareSnippet');
 
     cy.visit(FRONTEND);
-    waitList200();
+
+    cy.wait('@list', { timeout: 20000 }).then(({ response }) => {
+      expect(response?.statusCode).to.eq(200);
+
+      cy.get('[data-testid="snippet-row"]', { timeout: 15000 })
+        .should('have.length.greaterThan', 0)
+        .and('have.length.lessThan', 50);
+    });
 
     cy.intercept('GET', `${BACKEND}/snippets/*`).as('detail');
     cy.intercept('GET', `${BACKEND}/snippets/*/tests`).as('tests');
 
     cy.get('[data-testid="snippet-row"]', { timeout: 15000 }).first().click();
 
-    // ahora sí podemos esperar esas requests
     cy.wait(['@detail', '@tests']);
   });
 
@@ -88,7 +72,6 @@ describe('Add snippet tests', () => {
     cy.get('[data-testid="PlayArrowIcon"]', { timeout: 10000 }).click();
     cy.wait('@run').its('response.statusCode').should('eq', 200);
 
-    // el editor existe y el área de salida se actualiza (nos quedamos con algo robusto)
     cy.get('.npm__react-simple-code-editor__textarea', { timeout: 10000 })
       .should('have.length.greaterThan', 0);
   });
@@ -99,7 +82,6 @@ describe('Add snippet tests', () => {
     cy.wait('@format').its('response.statusCode').should('eq', 200);
   });
 
-
   it('Can save snippets', () => {
     cy.intercept('PUT', `${BACKEND}/snippets/*`).as('save');
     cy.get('.npm__react-simple-code-editor__textarea', { timeout: 10000 })
@@ -109,27 +91,6 @@ describe('Add snippet tests', () => {
     cy.get('[data-testid="SaveIcon"]', { timeout: 10000 }).click();
     cy.wait('@save').its('response.statusCode').should('be.oneOf', [200, 204]);
   });
-
-  // it('Can run a snippet test case', () => {
-  //   cy.intercept('POST', `${BACKEND}/snippets/*/tests/*/run`).as('runTest');
-  //
-  //   // abrir modal de tests
-  //   cy.get('[data-testid="BugReportIcon"]', { timeout: 10000 }).click();
-  //   cy.wait('@tests').its('response.statusCode').should('eq', 200);
-  //
-  //   // ejecutar primer test (botón "Run" dentro del modal)
-  //   cy.contains('button', /^run$/i, { timeout: 10000 }).first().click({ force: true });
-  //   cy.wait('@runTest').its('response.statusCode').should('eq', 200);
-  //
-  //   // resultado visible (texto flexible)
-  //   cy.contains(/passed|failed|success|resultado|output/i, { timeout: 10000 }).should('be.visible');
-  // });
-
-  // it('Can download snippet', () => {
-  //   cy.intercept('GET', `${BACKEND}/snippets/*/download*`).as('download');
-  //   cy.get('[data-testid="FileDownloadIcon"]', { timeout: 10000 }).click({ force: true });
-  //   cy.wait('@download').its('response.statusCode').should('eq', 200);
-  // });
 
   it('Can delete snippets', () => {
     cy.intercept('DELETE', `${BACKEND}/snippets/*`).as('delete');
